@@ -8,19 +8,17 @@ import cacheControl from 'koa-cache-control'
 import onerror from 'koa-onerror'
 import logger from 'koa-logger'
 import helmet from 'koa-helmet'
-
+import granary from './app/plugins/granary'
 // 导入 rouer.js 文件
 import router from './app/router'
 
 const app = new Koa()
-
 // 在使用 koa-session 之前，必须需要指定一个私钥
 // 用于加密存储在 session 中的数据
 app.keys = ['some secret hurr']
 
 // 将捕获的错误消息生成友好的错误页面（仅限开发环境）
 onerror(app)
-
 
 app
   // 在命令行打印日志
@@ -45,6 +43,11 @@ app
       maxFileSize: 200 * 1024 * 1024
     }
   }))
+  .use(async (ctx,next) => {
+    granary.ctx = ctx
+    // granary.context.body = 1;
+    await next();
+  })
   // 载入路由
   .use(router.routes(), router.allowedMethods())
 

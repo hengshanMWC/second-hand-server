@@ -1,5 +1,6 @@
 import MongoDB from 'mongodb'
-const MongoClient =MongoDB.MongoClient;
+import { formatTimea } from '../utils/common'
+const MongoClient = 	MongoDB.MongoClient;
 const ObjectID = MongoDB.ObjectID;
 class Db {
 	static getInstance(option){
@@ -15,6 +16,10 @@ class Db {
 		//配置分页字段
 		this.page = option.page || [];
 		this.dbClient = null;
+		//自动生成的日期
+		this.createDate = option.date && option.date.createDate || 'create_date'
+		this.upDate = option.date && option.date.upDate || 'up_date'
+		
 		//表
 		this.collection;
 		this.connect();
@@ -37,8 +42,8 @@ class Db {
 			}
 		})
 	}
-	finds(collectionName, json){
-		let {name, data} = this.reqData(collectionName, json)
+	finds(collectionName, json, project){
+		let {name, data, data2: projectData} = this.reqData(collectionName, json, project)
 		this.automaticId(data)
 		let arr = this.getPage(data)
 		return new Promise((resolve,reject)=>{
@@ -49,9 +54,13 @@ class Db {
 							reject(err)
 							return;
 						}
-						let result = db.collection(name).find(data,{u_password:0,_id:0}).limit(arr[0]).skip(arr[1])
+						let result = db.collection(name).find(data)
+						.project(projectData)
+						.limit(arr[0])
+						.skip(arr[1])
+						.sort({"_id": -1})
 						result.toArray((err,docs) => {
-							err ? reject(err) : resolve({data:docs,count})
+							err ? reject(err) : resolve({list: docs,count})
 						})
 					})
 					
@@ -69,18 +78,21 @@ class Db {
 		})
 	}
 	up(collectionName, json, setJson){
-		let {name, data, setData} = this.reqData(collectionName, json, setJson)
-		this.automaticId(setData)
+		let {name, data, data2: setData} = this.reqData(collectionName, json, setJson)
+		this.automaticId(data)
+		this.date(setData, this.upDate)
 		return new Promise((resolve, reject) => {
 			this.connect()
 				.then( db => {
-					 db.collection(name).updataOne(data, { $set: setData}, (err,docs) => err ? reject(err) : resolve(docs))
+					console.log(data,{ $set: setData});
+					db.collection(name).updateOne(data, { $set: setData}, (err,docs) => err ? reject(err) : resolve(docs))
 				})
 		})
 	}
 	add(collectionName, json){
 		let {name, data} = this.reqData(collectionName, json)
 		this.automaticId(data)
+		this.date(data)
 		return new Promise(( resolve, reject ) => {
 			this.connect()
 				.then( db => {
@@ -98,16 +110,22 @@ class Db {
 				})
 		})
 	}
-	reqData(collectionName, json, setJson){
+	date(data, dates = [this.createDate, this.upDate]){
+		let timea = formatTimea()
+		typeof dates === 'object' 
+		? dates.forEach( val => data[val] = timea) 
+		: data[dates] = timea;
+	}
+	reqData(collectionName, json, json2){
 		let name = collectionName 
 		let data = json
-		let setData = setJson
+		let data2 = json2
 		if(typeof collectionName !== 'string') {
 			name = this.collection;
 			data = collectionName
-			setData = json
+			data2 = json
 		}
-		return {name,data,setData}
+		return {name,data,data2}
 	}
 	getPage(data){
 		let arr = [5,0]
@@ -132,8 +150,11 @@ class Db {
 		this.collection = str;
 	}
 	getObjectId(id){ 
-		console.log(id)
-        return new ObjectID(id);
+		try {
+        	return new ObjectID(id);
+		} catch(e) {
+			return id;
+		}
     }
 }
 export default Db

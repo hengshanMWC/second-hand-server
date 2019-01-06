@@ -7,7 +7,8 @@ router
 	.post('/login', User.login)//登录
 	.get('/isLogin',User.isLogin)//检查是否登录
 	.get('/quit', User.quit)//退出登录
-	.post('/addUser', User.add)//添加用户
+	.get('/currentUserInfo',User.currentInfo)//拿到当前登录人信息
+	.post('/addUser', User.add)//用户列表
 	.get('/getUserList', User.find)//查询用户列表
 	.get('/getUserInfo', User.info)//用户信息
 	.post('/upUserInfo', User.updata)//更新用户信息
