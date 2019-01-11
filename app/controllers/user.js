@@ -3,13 +3,13 @@ import md5 from 'md5'
 import granary from '../plugins/granary'
 db.setCollection('user');
 
-class user {
+class User {
 	//登录
 	static async login(ctx){
 		await granary.aid(async post => {
 			let res = {};
 			post.u_password = md5(post.u_password) 
-			let data = await db.find({u_account: post.u_account})
+			let data = await db._findOne({u_account: post.u_account})
 			if(data) {
 				if (data.u_password === post.u_password) {
 					res.data = data
@@ -42,16 +42,22 @@ class user {
 	static async add(ctx){
 		await granary.aid(async post => {
 			post.u_password = md5(post.u_password) 
-			return db.add(post)
+			return db._addOne(post)
 		})
 	}
 	//用户列表
 	static async find(ctx){
-		await granary.aid(async get => await db.finds(get,{u_password: 0}))
+		await granary.aid(async get => {
+			let arr = ['u_static']
+			db.number(get, ...arr)
+			db.vague(get, ...arr)
+			get.power = {$ne: 'true'}
+			return await db._find(get,{u_password: 0, u_age: 0, u_qq: 0, u_mail: 0})
+		})
 	}
 	//用户信息
 	static async info(ctx){
-		await granary.aid(async get => await db.find({"_id": get.id}))
+		await granary.aid(async get => await db._findOne({"_id": get.id}, {projection:{u_password: 0}}))
 	}
 	//更新用户
 	static async updata(ctx) {
@@ -64,12 +70,25 @@ class user {
 			} else {
 				post.u_password = md5(post.u_password)
 			}
-			return await db.up({"_id": id}, post)
+			return await db._upOne({"_id": id}, post)
 		})
 	}
 	//删除用户
 	static async del(ctx) {
-		await granary.aid(async get => await db.del({"_id": get.id}))
+		await granary.aid(async get => {
+			let data;
+			let arrId = get.id;
+			if(arrId instanceof Array) {
+
+			} else {
+				data = await db._delOne({"_id": arrId})
+			}
+			// let arr =  ? get : [get]
+			// let arrId = arr.map( val => ({"_id": val.id}))
+			// console.log(arrId)
+			// let data = await db._del(arrId)
+			return data;
+		})
 	}
 }
-export default user;
+export default User;

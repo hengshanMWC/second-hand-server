@@ -3,7 +3,7 @@ import Db from '../plugins/db.js'
 export default Db.getInstance({
 	config,
 	page: [
-		['pageSize', 3],
-		['pageIndex', 0],
+		['pageSize', 5],
+		['pageIndex', 1],
 	]
 })

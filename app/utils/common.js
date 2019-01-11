@@ -33,7 +33,8 @@ export function depthAssign(obj, ...objs) {
 /**
  * Date或者时间戳，Number/数组，String年月日格式
  */
-export function formatTimea(date = new Date(), format = 0, slice = '/') {
+export function formatTimea(date = new Date(), format = 0, slice) {
+  slice = typeof data === 'string' ? data : '-' 
   const repair = num => num < 10 ? '0' + num : num;
   const aFn = [
     () => date.getFullYear(),

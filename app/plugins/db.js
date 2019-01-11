@@ -14,7 +14,7 @@ class Db {
 		this.dbUrl = option.config.dbUrl
 		this.dbName = option.config.dbName
 		//配置分页字段
-		this.page = option.page || [];
+		this.page = option.page || [['page',5],['limit', 1]];
 		this.dbClient = null;
 		//自动生成的日期
 		this.createDate = option.date && option.date.createDate || 'create_date'
@@ -42,10 +42,12 @@ class Db {
 			}
 		})
 	}
-	finds(collectionName, json, project){
+	_find(collectionName, json, project){
 		let {name, data, data2: projectData} = this.reqData(collectionName, json, project)
 		this.automaticId(data)
 		let arr = this.getPage(data)
+		// this.vague(data);
+		console.log(data)
 		return new Promise((resolve,reject)=>{
 			this.connect()
 				.then(db => {
@@ -67,29 +69,28 @@ class Db {
 				})
 		})
 	}
-	find(collectionName, json){
-		let {name, data} = this.reqData(collectionName, json)
+	_findOne(collectionName, json, project){
+		let {name, data, data2: projectData} = this.reqData(collectionName, json, project)
 		this.automaticId(data)
 		return new Promise((resolve, reject) => {
 			this.connect()
 				.then( db => {
-					 db.collection(name).findOne(data, (err,docs) => err ? reject(err) : resolve(docs))
+					 db.collection(name).findOne(data, projectData, (err,docs) => err ? reject(err) : resolve(docs))
 				})
 		})
 	}
-	up(collectionName, json, setJson){
+	_upOne(collectionName, json, setJson){
 		let {name, data, data2: setData} = this.reqData(collectionName, json, setJson)
 		this.automaticId(data)
 		this.date(setData, this.upDate)
 		return new Promise((resolve, reject) => {
 			this.connect()
 				.then( db => {
-					console.log(data,{ $set: setData});
 					db.collection(name).updateOne(data, { $set: setData}, (err,docs) => err ? reject(err) : resolve(docs))
 				})
 		})
 	}
-	add(collectionName, json){
+	_addOne(collectionName, json){
 		let {name, data} = this.reqData(collectionName, json)
 		this.automaticId(data)
 		this.date(data)
@@ -100,13 +101,23 @@ class Db {
 				})
 		})
 	}
-	del(collectionName, json){
+	_delOne(collectionName, json){
 		let {name, data} = this.reqData(collectionName, json)
 		this.automaticId(data)
 		return new Promise(( resolve, reject ) => {
 			this.connect()
 				.then( db => {
 					db.collection(name).removeOne(data, (err, docs) => err ? reject(err) : resolve(docs))
+				})
+		})
+	}
+	_del(collectionName, json){
+		let {name, data} = this.reqData(collectionName, json)
+		this.automaticId(data)
+		return new Promise(( resolve, reject ) => {
+			this.connect()
+				.then( db => {
+					db.collection(name).remove(data, (err, docs) => err ? reject(err) : resolve(docs))
 				})
 		})
 	}
@@ -127,8 +138,25 @@ class Db {
 		}
 		return {name,data,data2}
 	}
+	vague(data, ...arr){
+		//判断是否是正则字符串
+		let r = new RegExp(/^\/[^\/]+\/$/)
+		Object.keys(data).forEach( val => {
+			if(val.indexOf('id') == -1){
+				let dataVal = data[val]
+				if(dataVal === '') {
+					delete data[val]
+				} else if(typeof dataVal !== 'object' && !r.test(dataVal) && arr.indexOf(val) === -1){
+					data[val] =  eval('/'+ dataVal +'/');
+				}
+			} 
+		})
+	}
+	/**
+	*分页配置
+	**/
 	getPage(data){
-		let arr = [5,0]
+		let arr = [5,1]
 		this.page.forEach((val, i) => {
 			if(data[val[0]]){
 				//limit requires an integer
@@ -137,9 +165,13 @@ class Db {
 				delete data[val[0]]
 			}
 		})
-		arr[1] = arr[0] * arr[1]
+		arr[1] = arr[0] * (arr[1] - 1)
 		return arr
 	}
+	/**
+	*自动将带有id的字段转new ObjectID
+	*data(object)
+	**/
 	automaticId(data){
 		Object.keys(data).forEach( val => {
 			let n = val.indexOf('id')
@@ -155,6 +187,9 @@ class Db {
 		} catch(e) {
 			return id;
 		}
+    }
+    number(data ,...arr){
+    	arr.forEach( val => arr[val] === '' ? arr[val] : Number(arr[val]))
     }
 }
 export default Db
