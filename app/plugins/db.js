@@ -1,6 +1,6 @@
 import MongoDB from 'mongodb'
 import { formatTimea } from '../utils/common'
-const MongoClient = 	MongoDB.MongoClient;
+const MongoClient = MongoDB.MongoClient;
 const ObjectID = MongoDB.ObjectID;
 class Db {
 	static getInstance(option){
@@ -46,7 +46,6 @@ class Db {
 		let {name, data, data2: projectData} = this.reqData(collectionName, json, project)
 		this.automaticId(data)
 		let arr = this.getPage(data)
-		// this.vague(data);
 		console.log(data)
 		return new Promise((resolve,reject)=>{
 			this.connect()
@@ -181,6 +180,7 @@ class Db {
 	setCollection(str){
 		this.collection = str;
 	}
+	//
 	getObjectId(id){ 
 		try {
         	return new ObjectID(id);
@@ -188,8 +188,20 @@ class Db {
 			return id;
 		}
     }
+    typeConversion(data, arr, type){
+    	arr.forEach( val => {
+    		let dataVal = data[val]
+    		if(dataVal !== undefined) data[val] = dataVal === '' ? dataVal : eval(type)(dataVal)
+    	})
+    }
+    //将非''字符串转为数字
     number(data ,...arr){
-    	arr.forEach( val => arr[val] === '' ? arr[val] : Number(arr[val]))
+    	this.typeConversion(data, arr, 'Number')
+    }
+    //将非''字符串转为布尔
+    boolean(data ,...arr){
+    	//Boolean会把字符串false转为true
+    	this.typeConversion(data, arr, 'JSON.parse')
     }
 }
 export default Db

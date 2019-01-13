@@ -42,16 +42,24 @@ class User {
 	static async add(ctx){
 		await granary.aid(async post => {
 			post.u_password = md5(post.u_password) 
+			const bDef = ['u_static', 'power']
+			const def = {
+				u_avatar: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1546710354901&di=6c92107f9216037d256d716893d02608&imgtype=0&src=http%3A%2F%2Fe.hiphotos.baidu.com%2Fzhidao%2Fwh%253D450%252C600%2Fsign%3Db1ae535a133853438c9a8f25a6239c48%2F29381f30e924b8992d85d90e6d061d950a7bf64f.jpg',
+			}
+			bDef.forEach( val => post[val] = post[val] === true ? true : false)
+			Object.keys(def).forEach( val => post[val] = post[val] ? post[val] : def[val])
 			return db._addOne(post)
 		})
 	}
 	//用户列表
 	static async find(ctx){
 		await granary.aid(async get => {
-			let arr = ['u_static']
-			db.number(get, ...arr)
-			db.vague(get, ...arr)
-			get.power = {$ne: 'true'}
+			let aB = ['u_static']
+			let aN = ['u_sex']
+			db.boolean(get, ...aB)
+			db.number(get, ...aN)
+			db.vague(get, ...aB,...aN)
+			get.power = {$ne: true}
 			return await db._find(get,{u_password: 0, u_age: 0, u_qq: 0, u_mail: 0})
 		})
 	}

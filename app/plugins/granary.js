@@ -7,7 +7,7 @@ class Granary {
 			mes: '',
 			state: true,
 		}
-		let data = await fn(reqData);
+		let data = await fn(reqData, ctx.request.files);
 		if(typeof data === 'object' && data.data === undefined && data.mes === undefined && data.state === undefined) data = {data}
 		Object.assign(res, data)
 		ctx.body = res
