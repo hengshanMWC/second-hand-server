@@ -31,10 +31,10 @@ export function depthAssign(obj, ...objs) {
   return obj;
 }
 /**
- * Date或者时间戳，Number/数组，String年月日格式
+ * Date或者时间格式，Number/数组，String年月日格式
  */
-export function formatTimea(date = new Date(), format = 0, slice) {
-  slice = typeof data === 'string' ? data : '-' 
+export function formatTimea(date = new Date(), format = 0, slice = '-') {
+  if(typeof date === 'string' || typeof date === 'number')date = new Date(date)
   const repair = num => num < 10 ? '0' + num : num;
   const aFn = [
     () => date.getFullYear(),
@@ -66,8 +66,10 @@ export function isProtocol(str){
   let b = new RegExp('^http[s]?://')
   return b.test(str)
 }
+//Date对象，默认前缀，是否将后两天变为今天明天
 export function week(date = new Date(),str = '星期', b){
-  let arr = ['一','二','三','四','五','六']
+  if(typeof date === 'string' || typeof date === 'number')date = new Date(date)
+  let arr = ['日','一', '二', '三', '四', '五', '六']
   let day = date.getDay()
   if(b) {
     arr[0] = '今天'
@@ -77,3 +79,23 @@ export function week(date = new Date(),str = '星期', b){
     return str + arr[day]
   }
 }
+//增加月份,b是否年.月返回格式，年，月
+export function setYM(num = 0, b, n, m){
+  let date = new Date()
+  let y = n || date.getFullYear();
+  let month = m || date.getMonth();
+  let he = month + num
+  if (he > 0) {
+    while (he > 11) {
+      he -= 12
+      y += 1
+    }
+  } else {
+    while (he < 0) {
+      he += 12
+      y -= 1
+    }
+  }
+  return b ? y + '.' + (he + 1) : he + 1
+}
+export let suffix = str => str.replace(/[^\.]+/,'')
