@@ -1,7 +1,8 @@
 import db from '../models'
 import md5 from 'md5'
 import granary from '../plugins/granary'
-db.setCollection('user');
+// db.setCollection('user');
+const coll = db.createCollection('user');
 
 class User {
 	//登录
@@ -9,7 +10,7 @@ class User {
 		await granary.aid(async post => {
 			let res = {};
 			post.u_password = md5(post.u_password) 
-			let data = await db._findOne({u_account: post.u_account})
+			let data = await coll._findOne({u_account: post.u_account})
 			if(data) {
 				if (data.u_password === post.u_password) {
 					res.data = data
@@ -28,6 +29,7 @@ class User {
 	}
 	//是否登录
 	static isLogin(ctx){
+		console.log(ctx.session.userInfo)
 		granary.aid(() => ({state: !!ctx.session.userInfo}))
 	}
 	//退出登录
@@ -35,8 +37,11 @@ class User {
 		granary.aid(() => ctx.session.userInfo = undefined)
 	}
 	//拿到当前登录人信息
-	static currentInfo(ctx) {
-		granary.aid(() => ctx.session.userInfo)
+	static async currentInfo(ctx) {
+		await granary.aid(() => {
+			if(!ctx.session.userInfo) return {state: false, mes: '当前没有登录人'}
+			return coll._findOne({_id: ctx.session.userInfo._id})
+		})
 	}
 	//添加用户
 	static async add(ctx){
@@ -44,11 +49,11 @@ class User {
 			post.u_password = md5(post.u_password) 
 			const bDef = ['u_static', 'power']
 			const def = {
-				u_avatar: '/upFile/img/default.jpg',
+				u_avatar: '/upFile/img/defalut/avatar.jpg',
 			}
 			bDef.forEach( val => post[val] = post[val] === true ? true : false)
 			Object.keys(def).forEach( val => post[val] = post[val] ? post[val] : def[val])
-			return db._addOne(post)
+			return coll._addOne(post)
 		})
 	}
 	//用户列表
@@ -56,16 +61,16 @@ class User {
 		await granary.aid(async get => {
 			let aB = ['u_static']
 			let aN = ['u_sex']
-			db.boolean(get, ...aB)
-			db.number(get, ...aN)
-			db.vague(get, ...aB,...aN)
+			coll.boolean(get, ...aB)
+			coll.number(get, ...aN)
+			coll.vague(get, ...aB,...aN)
 			get.power = {$ne: true}
-			return await db._find(get,{u_password: 0, u_age: 0, u_qq: 0, u_mail: 0})
+			return await coll._find(get,{u_password: 0, u_age: 0, u_qq: 0, u_mail: 0})
 		})
 	}
 	//用户信息
 	static async info(ctx){
-		await granary.aid(async get => await db._findOne({"_id": get.id}, {projection:{u_password: 0}}))
+		await granary.aid(async get => await coll._findOne({"_id": get.id}, {projection:{u_password: 0}}))
 	}
 	//更新用户
 	static async updata(ctx) {
@@ -78,25 +83,12 @@ class User {
 			} else {
 				post.u_password = md5(post.u_password)
 			}
-			return await db._upOne({"_id": id}, post)
+			return await coll._upOne({"_id": id}, post)
 		})
 	}
 	//删除用户
-	static async del(ctx) {
-		await granary.aid(async get => {
-			let data;
-			let arrId = get.id;
-			if(arrId instanceof Array) {
-
-			} else {
-				data = await db._delOne({"_id": arrId})
-			}
-			// let arr =  ? get : [get]
-			// let arrId = arr.map( val => ({"_id": val.id}))
-			// console.log(arrId)
-			// let data = await db._del(arrId)
-			return data;
-		})
+	static async del(ctx){
+		await granary.aid( async get => coll.del(get))
 	}
 }
 export default User;

@@ -8,9 +8,16 @@ class Granary {
 			state: true,
 		}
 		let data = await fn(reqData, ctx.request.files);
+		if(data === null) data = {data:null}
 		if(typeof data === 'object' && data.data === undefined && data.mes === undefined && data.state === undefined) data = {data}
 		Object.assign(res, data)
 		ctx.body = res
+	}
+	judge(map) {
+	    return Object.keys(map).find(val => map[val])
+	}
+	sort(data, str = 'weight'){
+		if(data.count) data.list.sort( (iMax,iMin) => iMin[str] - iMax[str])
 	}
 	set ctx(ctx) {
 		this.context = ctx;

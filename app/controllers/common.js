@@ -3,6 +3,7 @@ import abReq from '../utils/abReq'
 import upFile from '../utils/upFile.js'
 let url = 'http://119.29.166.254:9090/api/';
 let fileUrl = '/upFile/img'
+//公共
 class Common {
 	static async provinceList(ctx){
 		await granary.aid( async get => await abReq(`${url}provinces`))
