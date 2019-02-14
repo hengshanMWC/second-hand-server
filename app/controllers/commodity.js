@@ -30,6 +30,7 @@ class Commodity {
 				post.u_school = uData.u_school 
 				post.u_name = uData.u_name 
 				coll.number(post, ...setNumber)
+				post.c_sales = 0//销量
 				return coll._addOne(post)
 			})
 		})
@@ -67,11 +68,6 @@ class Commodity {
 					dbData[val] = v
 				}
 			}
-			if(post.u_id){
-				let uData = await coll._findOne('user', {_id: post.u_id})
-				dbData.u_school = uData.u_school 
-				dbData.u_name = uData.u_name 
-			}
 			coll.number(dbData, ...setNumber)
 			return coll._upOne({_id: c_id}, dbData)
 		})
@@ -79,12 +75,41 @@ class Commodity {
 	static async info(ctx){
 		await granary.aid(async get => {
 			let cData = await coll._findOne({_id: get.id}, {projection:{create_date: 1}})
-			let uData = await coll._findOne('user',{_id: cData.u_id}, {projection:{u_password: 0}})
+			let uData = await coll._findOne('user',{_id: cData.u_id}, {projection:{
+				u_password: 0,
+				power: 0,
+			}})
+			if(ctx.session.userInfo){
+				let collData = await coll._findOne('collection',{u_id: ctx.session.userInfo._id, c_id: get.id})
+				if(collData) {
+					cData.c_col = 1
+					cData.col_id = collData._id
+				} else {
+					cData.c_col = 0
+				}
+			} else {
+				cData.c_col = 0
+			}
 			return Object.assign({}, cData, uData)
 		})
 	}
 	static async del(ctx){
 		await granary.aid( async get => coll.del(get))
+	}
+	static async isBuy(ctx){
+		await granary.aid( async get => {
+			const map = {
+				'没有商品c_id': !get.c_id,
+				'没有用户u_id': !get.u_id,
+			}
+			let b = granary.judge(map)
+			if(b) return {state: false, mes: b}
+			let data = await coll._findOne('order', {
+				u_id: get.u_id,
+				c_id: get.c_id,
+			})
+			return {state: !!data}
+		})
 	}
 }
 export default Commodity

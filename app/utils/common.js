@@ -33,7 +33,7 @@ export function depthAssign(obj, ...objs) {
 /**
  * Date或者时间格式，Number/数组，String年月日格式
  */
-export function formatTimea(date = new Date(), format = 0, slice = '-') {
+export function formatTime(date = new Date(), format = 0, slice = '-') {
   if(typeof date === 'string' || typeof date === 'number')date = new Date(date)
   const repair = num => num < 10 ? '0' + num : num;
   const aFn = [

@@ -1,7 +1,7 @@
 import db from '../models'
 import granary from '../plugins/granary'
 const coll = db.createCollection('banner');
-const setNumbe = ['b_weight']
+const setNumbe = ['b_weight', 'b_state']
 
 //收藏
 class Banner {
@@ -13,6 +13,8 @@ class Banner {
 	}
 	static async find(ctx){
 		await granary.aid(async get => {
+			coll.number(get, ...setNumbe)
+			coll.vague(get, ...setNumbe);
 			let bBata = await coll._find(get)
 			granary.sort(bBata, 'b_weight')
 			return bBata

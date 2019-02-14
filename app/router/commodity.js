@@ -7,5 +7,6 @@ router
 	.get('/info', Commodity.info)//商品信息
 	.post('/upInfo', Commodity.upInfo)//更新商品信息
 	.get('/del', Commodity.del)//删除商品
+	.get('/isBuy', Commodity.isBuy)//判断用户是否购买过该商品
 
 export default router.routes(); 

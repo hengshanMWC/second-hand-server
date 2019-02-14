@@ -1,6 +1,6 @@
 import db from '../models'
 import granary from '../plugins/granary'
-const coll = db.createCollection('banner');
+const coll = db.createCollection('collection');
 //收藏
 class banner {
 	static async add(ctx) {
@@ -8,8 +8,21 @@ class banner {
 	}
 	static async find(ctx){
 		await granary.aid(async get => {
-			coll.vague(get)
-			let fData = await coll._find(get)	
+			let id = get.id
+			delete get.id
+			let data = Object.assign({_id: id}, get)
+			coll.vague(data)
+			let fData = await coll._find(data)
+			let cArr = fData.list.map( arr => coll.getObjectId(arr.c_id))
+			let cData = await coll._find('commodity', {
+				_id: {
+					"$in": cArr
+				}
+			})
+			coll.relation(
+				{ data: cData.list, key: '_id'}, 
+				{ data :fData.list, key: 'c_id'}, 
+				'commodity')
 			return fData
 		})
 	}

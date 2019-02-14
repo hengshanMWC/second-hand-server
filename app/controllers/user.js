@@ -29,7 +29,6 @@ class User {
 	}
 	//是否登录
 	static isLogin(ctx){
-		console.log(ctx.session.userInfo)
 		granary.aid(() => ({state: !!ctx.session.userInfo}))
 	}
 	//退出登录
@@ -38,9 +37,9 @@ class User {
 	}
 	//拿到当前登录人信息
 	static async currentInfo(ctx) {
-		await granary.aid(() => {
+		await granary.aid(async () => {
 			if(!ctx.session.userInfo) return {state: false, mes: '当前没有登录人'}
-			return coll._findOne({_id: ctx.session.userInfo._id})
+			return await coll._findOne({_id: ctx.session.userInfo._id})
 		})
 	}
 	//添加用户
@@ -83,6 +82,13 @@ class User {
 			} else {
 				post.u_password = md5(post.u_password)
 			}
+			let uData = await coll._findOne({_id: id}, {projection:{u_password: 0}})
+			let u_name = post.u_name;
+			let u_school = post.u_school;
+			//更新
+			if(uData.u_name !== u_name || uData.u_school !== u_school)
+				console.log(1)
+				coll._updateMany('commodity', {"u_id": id}, {u_name,u_school})
 			return await coll._upOne({"_id": id}, post)
 		})
 	}

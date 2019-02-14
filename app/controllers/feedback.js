@@ -1,21 +1,22 @@
 import db from '../models'
 import granary from '../plugins/granary'
 const coll = db.createCollection('feedback');
-const setNumbe = ['b_weight']
+const setNumbe = ['f_type']
 
 //问题反馈
 class Feedback {
 	static async add(ctx) {
 		await granary.aid(post => {
 			coll.number(post, ...setNumbe)
+			const res = coll.islogin(post,ctx.session.userInfo);
+			if(res) return res
 			return coll._addOne(post)
 		})
 	}
 	static async find(ctx){
 		await granary.aid(async get => {
-			let bBata = await coll._find(get)
-			granary.sort(bBata, 'b_weight')
-			return bBata
+			coll.number(get, ...setNumbe)
+			return await coll._find(get)
 		})
 	}
 	static async info(ctx) {

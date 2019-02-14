@@ -1,4 +1,4 @@
-import { formatTimea } from '../utils/common'
+import { formatTime } from '../utils/common'
 import MongoDB from 'mongodb'
 const ObjectID = MongoDB.ObjectID;
 class Coll {
@@ -55,6 +55,18 @@ class Coll {
 				})
 		})
 	}
+	_updateMany(collectionName, json, setJson){
+		let {name, data, data2: setData = {}} = this.reqData(collectionName, json, setJson)
+		this.automaticId(data)
+		this.automaticId(setData)
+		this.date(setData, this.upDate)
+		return new Promise((resolve, reject) => {
+			this.db.connect()
+				.then( db => {
+					db.collection(name).updateMany(data, { $set: setData}, (err,docs) => err ? reject(err) : resolve(docs))
+				})
+		})
+	}
 	_addOne(collectionName, json){
 		let {name, data} = this.reqData(collectionName, json)
 		this.automaticId(data)
@@ -86,6 +98,16 @@ class Coll {
 				})
 		})
 	}
+	aggregate(collectionName, json){
+		let {name, data} = this.reqData(collectionName, json)
+		this.automaticId(json)
+		return new Promise(( resolve, reject ) => {
+			this.db.connect()
+				.then( db => {
+					db.collection(name).remove(data, (err, docs) => err ? reject(err) : resolve(docs))
+				})
+		})
+	}
 	async del(get){ 
 		let data;
 		let arrId = get.id;
@@ -101,7 +123,7 @@ class Coll {
 		return data;
 	}
 	date(data, dates = [this.createDate, this.upDate]){
-		let timea = formatTimea()
+		let timea = formatTime()
 		typeof dates === 'object' 
 		? dates.forEach( val => data[val] = timea) 
 		: data[dates] = timea;
@@ -117,19 +139,22 @@ class Coll {
 		}
 		return {name,data,data2}
 	}
+	//正则查询，删除为空之类的
+	//arr不匹配范围
 	vague(data, ...arr){
 		//判断是否是正则字符串
 		let r = new RegExp(/^\/[^\/]+\/$/)
 		arr.push(this.page[0][0],this.page[1][0])
 		Object.keys(data).forEach( val => {
-			if(val.indexOf('id') == -1){
-				let dataVal = data[val]
-				if(dataVal === '') {
-					delete data[val]
-				} else if(typeof dataVal !== 'object' && !r.test(dataVal) && arr.indexOf(val) === -1){
+			let dataVal = data[val]
+			if(dataVal === '' || dataVal === undefined || dataVal === null) {
+				delete data[val]
+			} else if(val.indexOf('id') == -1){
+				if(typeof dataVal !== 'object' && !r.test(dataVal) && arr.indexOf(val) === -1){
 					data[val] =  eval('/'+ dataVal +'/');
 				}
-			} 
+			}
+			
 		})
 	}
 	time0(data){
@@ -169,7 +194,35 @@ class Coll {
 			if(val.indexOf('id') !== -1) data[val] = this.getObjectId(data[val]);
 		})
 	}
-	
+	//列表查询数据合并
+	relation(forData, findData, key, keyv){
+		forData.data.forEach( obj => findData.data.forEach( obj2 => {
+				if(obj[forData.key].toString() == obj2[findData.key].toString()) obj2[key] = keyv ? obj[keyv] : obj
+			})
+		)
+	}
+	//upInfo的时候指定和添加
+	delFuse(post, data){
+		let dbData = new Object()
+		for(let val in data) {
+			let v = data[val] 
+			if(v === '' && post[val]){
+				dbData[val] = post[val]
+			} else if(v !== ''){
+				dbData[val] = v
+			}
+		}
+		return dbData;
+	}
+	//默认当前登录人的_id
+	islogin(post, userInfo, key = 'u_id'){
+		let id = post[key]
+		try {
+			post[key] = id ? id : userInfo._id
+		} catch(e) {
+			return { state: false, mes: '如果不存在当前登录人，请传u_id'}
+		}
+	}
 	//
 	getObjectId(id){ 
 		try {

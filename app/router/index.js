@@ -7,6 +7,8 @@ import collection from './collection'
 import type from './type'
 import order from './order'
 import banner from './banner'
+import feedback from './feedback'
+import prove from './prove'
 const router = new Router
 router.prefix('/second-hand/api')
 // router.prefix('/second-hand/api/')//这样会找不到
@@ -19,4 +21,6 @@ router
 	.use('/type', type)//商品类型
 	.use('/order', order)//商品订单
 	.use('/banner', banner)//轮播图
+	.use('/feedback', feedback)//问题反馈
+	.use('/prove', prove)//认证
 export default router
