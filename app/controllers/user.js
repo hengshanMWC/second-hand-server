@@ -1,6 +1,7 @@
 import db from '../models'
 import md5 from 'md5'
 import granary from '../plugins/granary'
+import fnUser from '../utils/user'
 // db.setCollection('user');
 const coll = db.createCollection('user');
 
@@ -38,6 +39,7 @@ class User {
 	//拿到当前登录人信息
 	static async currentInfo(ctx) {
 		await granary.aid(async () => {
+			// coll._updateMany('order',{}, {$set: {c_del: []})
 			if(!ctx.session.userInfo) return {state: false, mes: '当前没有登录人'}
 			return await coll._findOne({_id: ctx.session.userInfo._id})
 		})
@@ -45,26 +47,14 @@ class User {
 	//添加用户
 	static async add(ctx){
 		await granary.aid(async post => {
-			post.u_password = md5(post.u_password) 
-			const bDef = ['u_static', 'power']
-			const def = {
-				u_avatar: '/upFile/img/defalut/avatar.jpg',
-			}
-			bDef.forEach( val => post[val] = post[val] === true ? true : false)
-			Object.keys(def).forEach( val => post[val] = post[val] ? post[val] : def[val])
+			fnUser.add(post, false)
 			return coll._addOne(post)
 		})
 	}
 	//用户列表
 	static async find(ctx){
 		await granary.aid(async get => {
-			let aB = ['u_static']
-			let aN = ['u_sex']
-			coll.boolean(get, ...aB)
-			coll.number(get, ...aN)
-			coll.vague(get, ...aB,...aN)
-			get.power = {$ne: true}
-			return await coll._find(get,{u_password: 0, u_age: 0, u_qq: 0, u_mail: 0})
+			return await coll._find(get, fnUser.find(get, false, coll))
 		})
 	}
 	//用户信息
@@ -87,7 +77,6 @@ class User {
 			let u_school = post.u_school;
 			//更新
 			if(uData.u_name !== u_name || uData.u_school !== u_school)
-				console.log(1)
 				coll._updateMany('commodity', {"u_id": id}, {u_name,u_school})
 			return await coll._upOne({"_id": id}, post)
 		})
@@ -95,6 +84,14 @@ class User {
 	//删除用户
 	static async del(ctx){
 		await granary.aid( async get => coll.del(get))
+	}
+	//清空消息提示
+	static async noNews(ctx){
+		await granary.aid( async get => {
+			const res = coll.islogin(get,ctx.session.userInfo);
+			if(res) return res
+			return await coll._upOne({_id: get.u_id}, {u_news: 0})
+		})
 	}
 }
 export default User;

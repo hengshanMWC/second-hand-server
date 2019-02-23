@@ -24,7 +24,7 @@ app
   // 在命令行打印日志
   .use(logger())
   // 缓存控制
-  .use(cacheControl({ maxAge: 60000 }))
+  // .use(cacheControl({ maxAge: 60000 }))
   // 开启 gzip 压缩
   .use(compress())
   // 跨域（允许在 http 请求头中携带 cookies）
@@ -52,7 +52,7 @@ app
   .use(router.routes(), router.allowedMethods())
 
   // 启动一个 http 服务器，并监听 3000 端口
-  .listen(3000)
+  .listen(81)
 
 // 导出 koa 实例（用于测试）
 export default app

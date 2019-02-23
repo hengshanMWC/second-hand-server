@@ -58,6 +58,9 @@ class Commodity {
 	          c_num: true,
 	          c_state: 2,
 	          c_detail: true,
+	          c_qq: true,
+	          c_tel: true,
+	          c_wx: true,
 	        }
 	        let dbData = {} 
 			for(let val in data) {
@@ -74,7 +77,7 @@ class Commodity {
 	}
 	static async info(ctx){
 		await granary.aid(async get => {
-			let cData = await coll._findOne({_id: get.id}, {projection:{create_date: 1}})
+			let cData = await coll._findOne({_id: get.id})
 			let uData = await coll._findOne('user',{_id: cData.u_id}, {projection:{
 				u_password: 0,
 				power: 0,

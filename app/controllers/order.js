@@ -19,7 +19,6 @@ function getMap(post){
 //如果是3到1,2，减少销量（-1）
 async function setCom(fData, dbData, n){
 	let cData = await coll._findOne('commodity', {_id: fData.c_id})
-	cData.c_sales = cData.c_sales ? cData.c_sales : 0;//为了向后兼容没了销量的商品
 	if(dbData.o_state == 0 || fData.o_state == 0) cData.c_num -= n * dbData.o_num//和0有关
 	if(dbData.o_state == 3 || fData.o_state == 3) cData.c_sales += n * dbData.o_num//和3有关
 	coll._upOne('commodity', {_id: fData.c_id}, cData)
@@ -40,14 +39,13 @@ class Order {
 				if(post.o_state !== 0){//商品处理
 					let upData = {}
 					upData.c_num = cData.c_num - post.o_num
-					upData.c_sales = upData.c_sales ? upData.c_sales : 0;//为了向后兼容没了销量的商品
 					if(upData.c_num <= 0) upData.c_state = 2
 					if(post.o_state === 3) upData.c_sales += post.o_num
 					await coll._upOne('commodity', {_id: post.c_id}, upData)
 				}
 				post.s_id = cData.u_id//卖方id
 				post.c_title = cData.c_title
-				post.o_del = true;
+				post.o_del = [];//软删除
 				return await coll._addOne(post)
 			}
 		})
@@ -55,32 +53,53 @@ class Order {
 	static async find(ctx){
 		await granary.aid(async get => {
 			coll.number(get, ...setNumber)
-			coll.vague(get, 'o_state')
+			coll.vague(get, ...setNumber)
+			let projection = {u_name: 1,_id: 1}
 			let oData = await coll._find(get);
 			//获取商品
-			let cArr = oData.list.map( arr => coll.getObjectId(arr.c_id))
-			let cData = await coll._find('commodity', {
-				_id: {
-					"$in": cArr
-				}
+			await coll.joint({
+				id: 'c_id',
+				collection: 'commodity',
+				fitData: oData,
+				apiKey: 'commodity',
 			})
-			coll.relation({data: cData.list, key: '_id'}, {data: oData.list, key: 'c_id'},'commodity')
+			// let cArr = oData.list.map( arr => coll.getObjectId(arr.c_id))
+			// let cData = await coll._find('commodity', {
+			// 	_id: {
+			// 		"$in": cArr
+			// 	}
+			// })
+			// coll.relation({data: cData.list, key: '_id'}, {data: oData.list, key: 'c_id'},'commodity')
 			//获取卖家
-			cArr = oData.list.map( arr => coll.getObjectId(arr.s_id))
-			let sData = await coll._find('user', {
-				_id: {
-					"$in": cArr
-				}
-			}, {u_name: 1,_id: 1})
-			coll.relation({data: sData.list, key: '_id'}, {data: oData.list, key: 's_id'}, 's_name', 'u_name')
+			await coll.joint({
+				id: 's_id',
+				par: projection,
+				fitData: oData,
+				apiKey: 's_name',
+				fitAppointKey: 'u_name'
+			})
+			// cArr = oData.list.map( arr => coll.getObjectId(arr.s_id))
+			// let sData = await coll._find('user', {
+			// 	_id: {
+			// 		"$in": cArr
+			// 	}
+			// }, {u_name: 1,_id: 1})
+			// coll.relation({data: sData.list, key: '_id'}, {data: oData.list, key: 's_id'}, 's_name', 'u_name')
 			//获取买家
-			cArr = oData.list.map( arr => coll.getObjectId(arr.b_id))
-			let bData = await coll._find('user', {
-				_id: {
-					"$in": cArr
-				}
-			}, {u_name: 1,_id: 1})
-			coll.relation({data: bData.list, key: '_id'}, {data: oData.list, key: 'b_id'},'b_name', 'u_name')
+			await coll.joint({
+				id: 'b_id',
+				par: projection,
+				fitData: oData,
+				apiKey: 'b_name',
+				fitAppointKey: 'u_name'
+			})
+			// cArr = oData.list.map( arr => coll.getObjectId(arr.b_id))
+			// let bData = await coll._find('user', {
+			// 	_id: {
+			// 		"$in": cArr
+			// 	}
+			// }, {u_name: 1,_id: 1})
+			// coll.relation({data: bData.list, key: '_id'}, {data: oData.list, key: 'b_id'},'b_name', 'u_name')
 			return oData
 		})
 	}
@@ -88,15 +107,15 @@ class Order {
 		await granary.aid(async post => {
 			let mes = granary.judge(getMap(post))
 			let _id = post.id
+			delete post.id
 			let data = {
 	          o_price: '',
 	          o_num: '',
 	          o_state: '',
-	          o_del: ''
 	        }
 	        let dbData = {} 
 			for(let val in data) {
-				if(data[val] == '' && post[val]){
+				if(data[val] === '' && post[val] !== undefined){
 					dbData[val] = post[val]
 				}
 			}
@@ -121,7 +140,6 @@ class Order {
 					setI = -1
 				}
 			}
-			
 			dbData.o_num = dbData.o_num ? dbData.o_num : fData.o_num
 			setI !== 0 && setCom(fData, dbData, setI)
 			return coll._upOne({_id}, dbData)
@@ -129,6 +147,10 @@ class Order {
 	}
 	static async del(ctx){
 		await granary.aid( async get => coll.del(get))
+	}
+	//软删除
+	static async softDel(ctx){
+		await granary.aid( async get => coll._upOne({_id: get.id}, {$push: {o_del: get.u_id}}))
 	}
 }
 export default Order

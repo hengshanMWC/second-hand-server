@@ -1,15 +1,27 @@
 import db from '../models'
 import granary from '../plugins/granary'
-import { formatTime } from '../utils/common'
+import { formatTime, newObj } from '../utils/common'
+import News from './news'
 const coll = db.createCollection('prove');
 const setNumbe = ['p_state']
 async function setState(post){
 	let state = post.p_state
-	if(state <= 1) return
+	if(state <= 0) return
 	let pData = await coll._findOne({_id: post.id})
 	let uData = await coll._findOne('user', {_id: pData.u_id})
-	uData.u_static = state === 2 ? true : false
-	coll._upOne({_id: pData.u_id}, uData)
+	uData.u_static = state === 1 ? true : false
+	coll._upOne('user', {_id: pData.u_id}, {
+		u_static: uData.u_static, 
+		'u_apply.u_static': 0
+	})
+}
+function addNews(newPost, data, is){
+	Object.assign(newPost, {
+		n_type: 1,
+		n_title: '<h1 class="ql-indent-1 ql-align-center"><span class="ql-size-large">认证通知</span></h1>',
+	}, data)
+	console.log(newPost)
+	News.publicAdd(newPost, is)
 }
 //认证
 class Prove {
@@ -19,30 +31,25 @@ class Prove {
 			const res = coll.islogin(post,ctx.session.userInfo);
 			if(res) return res
 			post.p_state = 0
-
+			console.log(post.u_id)
+			addNews(newObj(post), {
+				n_content: '"<p class="ql-indent-1">您的认证将于2个工作日内审核完成</p>"',
+			}, 1)
+			coll._upOne('user', {_id: post.u_id}, {
+				'u_apply.u_static': 1
+			})
 			return coll._addOne(post)
 		})
 	}
 	static async find(ctx){
 		await granary.aid(async get => {
 			coll.number(get, ...setNumbe)
+			coll.vague(get, ...setNumbe)
 			return await coll._find(get)
 		})
 	}
 	static async info(ctx) {
-		await granary.aid(async get => {
-			let info = await coll._findOne({_id: get.id})
-			if(Array.isArray(info.p_contents)){
-				let cArr = info.p_contents.map( arr => coll.getObjectId(arr.u_id))
-				let uData = await coll._find('user', {
-					_id: {
-						"$in": cArr
-					}
-				})
-				coll.relation({data: uData.list, key: '_id'}, {data: info.p_contents, key: 'u_id'},'u_name','u_name')
-			}
-			return info
-		})
+		await granary.aid(async get => coll._findOne({_id: get.id}))
 	}
 	static async upInfo(ctx) {
 		await granary.aid(async post => {
@@ -53,9 +60,8 @@ class Prove {
 				p_prove: '',
 				p_school: '',
 				p_image: '',
-				p_state: '',
 			}
-			await setState(post)
+			setState(post)
 			let data = coll.delFuse(post, setData)
 			return coll._upOne({_id: id}, data)
 		})
@@ -68,24 +74,32 @@ class Prove {
 			const setData = {
 				p_state: '',
 				p_content: '',
+				p_id: ''//操作人
 			}
-			await setState(post)
-			let data = coll.delFuse(post, setData)
-			if(data.p_content) {
-				if(!Array.isArray(data.p_contents)) data.p_contents = new Array()
-				try {
-					data.p_contents.push({
-						content: data.p_content,
-						state: data.p_state,
-						u_id: ctx.session.userInfo._id,
-						create_date: formatTime(),
-					}) 
-				} catch(e) {
-					return {mes: '审核用户需要登录', state: false}
-				}
-				delete data.p_content
-			}
-			return coll._upOne({_id: id}, post)
+			const res = coll.islogin(post,ctx.session.userInfo, 'p_id');
+			if(res) return res
+			// if(data.p_content) {
+			// 	if(!Array.isArray(data.p_contents)) data.p_contents = new Array()
+			// 	try {
+			// 		data.p_contents.push({
+			// 			content: data.p_content,
+			// 			state: data.p_state,
+			// 			u_id: ctx.session.userInfo._id,
+			// 			create_date: formatTime(),
+			// 		}) 
+			// 	} catch(e) {
+			// 		return {mes: '审核用户需要登录', state: false}
+			// 	}
+			// 	// coll._upOne('user', {_id: })
+			// 	delete data.p_content
+			// }
+			let data = coll.delFuse(post, setData)	
+			let newPost = newObj(post)
+			newPost.n_id = post.p_id
+			addNews(newPost, {
+				n_content: data.p_content,
+			}, 0)
+			return coll._upOne({_id: id}, data)
 		})
 	}
 	static async del(ctx){

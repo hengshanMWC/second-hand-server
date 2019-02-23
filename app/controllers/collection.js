@@ -27,7 +27,16 @@ class banner {
 		})
 	}
 	static async del(ctx){
-		await granary.aid( async get => coll.del(get))
+		await granary.aid( async get => {
+			if(get.id){
+				return await coll.del(get)
+			} else {
+				return await coll._delOne({
+					u_id: get.u_id,
+					c_id: get.c_id
+				})
+			}
+		})
 	}
 	
 }

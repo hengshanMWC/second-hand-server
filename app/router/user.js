@@ -11,4 +11,6 @@ router
 	.get('/info', User.info)//用户信息
 	.post('/upInfo', User.updata)//更新用户信息
 	.get('/del', User.del)//删除用户
+	.get('/noNews', User.noNews)//清空消息提示
+
 export default router.routes()
