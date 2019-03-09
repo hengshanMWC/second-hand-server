@@ -8,7 +8,9 @@ import cacheControl from 'koa-cache-control'
 import onerror from 'koa-onerror'
 import logger from 'koa-logger'
 import helmet from 'koa-helmet'
+// import sslify from 'koa-sslify'
 import granary from './app/plugins/granary'
+
 // 导入 rouer.js 文件
 import router from './app/router'
 
@@ -21,6 +23,7 @@ app.keys = ['some secret hurr']
 onerror(app)
 
 app
+  // .use(sslify())
   // 在命令行打印日志
   .use(logger())
   // 缓存控制

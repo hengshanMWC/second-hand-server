@@ -36,10 +36,21 @@ class Commodity {
 		})
 	}
 	static async find(ctx){
-		await granary.aid( get => {
+		await granary.aid(async get => {
 			coll.number(get, ...setNumber)
 			coll.vague(get, 'c_state')
-			return coll._find(get)	
+			let cData = await coll._find(get, {$projection: {
+				c_detail: 0
+			}})	
+			// await coll.joint({
+			// 	par: {$projection: {
+			// 		u_school: 1,
+			// 		u_name: 1,
+			// 	}},
+			// 	fitData: cData,
+			// })
+			return cData
+
 		})
 	}
 	static async upInfo(ctx){

@@ -39,7 +39,7 @@ class User {
 	//拿到当前登录人信息
 	static async currentInfo(ctx) {
 		await granary.aid(async () => {
-			// coll._updateMany('order',{}, {$set: {c_del: []})
+			// coll._updateMany('user',{}, {$unset: {u_new: 1}})
 			if(!ctx.session.userInfo) return {state: false, mes: '当前没有登录人'}
 			return await coll._findOne({_id: ctx.session.userInfo._id})
 		})
@@ -77,7 +77,7 @@ class User {
 			let u_school = post.u_school;
 			//更新
 			if(uData.u_name !== u_name || uData.u_school !== u_school)
-				coll._updateMany('commodity', {"u_id": id}, {u_name,u_school})
+				coll._updateMany('commodity', {"u_id": id}, {$set:{u_name,u_school}})
 			return await coll._upOne({"_id": id}, post)
 		})
 	}
@@ -85,13 +85,6 @@ class User {
 	static async del(ctx){
 		await granary.aid( async get => coll.del(get))
 	}
-	//清空消息提示
-	static async noNews(ctx){
-		await granary.aid( async get => {
-			const res = coll.islogin(get,ctx.session.userInfo);
-			if(res) return res
-			return await coll._upOne({_id: get.u_id}, {u_news: 0})
-		})
-	}
+	
 }
 export default User;

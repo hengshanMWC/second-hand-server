@@ -13,16 +13,28 @@ class banner {
 			let data = Object.assign({_id: id}, get)
 			coll.vague(data)
 			let fData = await coll._find(data)
-			let cArr = fData.list.map( arr => coll.getObjectId(arr.c_id))
-			let cData = await coll._find('commodity', {
-				_id: {
-					"$in": cArr
-				}
+			//获取商品
+			await coll.joint({
+				id: 'c_id',
+				collection: 'commodity',
+				fitData: fData,
+				apiKey: 'commodity',
+				par: {$projection: {
+					c_detail: 0,
+				}}
 			})
-			coll.relation(
-				{ data: cData.list, key: '_id'}, 
-				{ data :fData.list, key: 'c_id'}, 
-				'commodity')
+			// let cArr = fData.list.map( arr => coll.getObjectId(arr.c_id))
+			// let cData = await coll._find('commodity', {
+			// 	_id: {
+			// 		"$in": cArr
+			// 	}
+			// }, $projection: {
+			// 	c_detail: 0,
+			// })
+			// coll.relation(
+			// 	{ data: cData.list, key: '_id'}, 
+			// 	{ data :fData.list, key: 'c_id'}, 
+			// 	'commodity')
 			return fData
 		})
 	}

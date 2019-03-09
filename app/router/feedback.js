@@ -7,5 +7,6 @@ router
 	.get('/info', Feedback.info)//反馈信息
 	.post('/upInfo', Feedback.upInfo)//更新反馈信息
 	.get('/del', Feedback.del)//删除反馈
+	.post('/reply', Feedback.reply)//反馈回复
 
 export default router.routes(); 

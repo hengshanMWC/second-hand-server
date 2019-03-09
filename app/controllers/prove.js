@@ -17,10 +17,8 @@ async function setState(post){
 }
 function addNews(newPost, data, is){
 	Object.assign(newPost, {
-		n_type: 1,
-		n_title: '<h1 class="ql-indent-1 ql-align-center"><span class="ql-size-large">认证通知</span></h1>',
+		n_type: 2,
 	}, data)
-	console.log(newPost)
 	News.publicAdd(newPost, is)
 }
 //认证
@@ -28,16 +26,15 @@ class Prove {
 	static async add(ctx) {
 		await granary.aid(post => {
 			// coll.number(post, ...setNumbe)
-			const res = coll.islogin(post,ctx.session.userInfo);
+			const res = granary.islogin();
 			if(res) return res
 			post.p_state = 0
-			console.log(post.u_id)
 			addNews(newObj(post), {
 				n_content: '"<p class="ql-indent-1">您的认证将于2个工作日内审核完成</p>"',
 			}, 1)
-			coll._upOne('user', {_id: post.u_id}, {
-				'u_apply.u_static': 1
-			})
+			// coll._upOne('user', {_id: post.u_id}, {
+			// 	'u_apply.u_static': 1
+			// })
 			return coll._addOne(post)
 		})
 	}
@@ -71,12 +68,13 @@ class Prove {
 		await granary.aid(async post => {
 			coll.number(post, ...setNumbe)
 			let id = post.id
+			post.l_id = post.id//消息的联系id
 			const setData = {
 				p_state: '',
 				p_content: '',
 				p_id: ''//操作人
 			}
-			const res = coll.islogin(post,ctx.session.userInfo, 'p_id');
+			const res = granary.islogin(post, 'p_id');
 			if(res) return res
 			// if(data.p_content) {
 			// 	if(!Array.isArray(data.p_contents)) data.p_contents = new Array()

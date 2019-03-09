@@ -12,7 +12,7 @@ class Coll {
 		this.automaticId(data)
 		let projectData = this.projectData(pro)
 		let arr = this.getPage(data)
-		console.log(projectData)
+		// console.log(projectData)
 		return new Promise((resolve,reject)=>{
 			this.db.connect()
 				.then(db => {
@@ -217,11 +217,28 @@ class Coll {
 	*keyb:findData的data指定的key获得指定的，forData的data，
 	*/
 	relation(forData, findData, key, keyv){
+		// if(key === 'u_name'){
+		// 	console.log(findData)
+		// }
 		forData.data.forEach( obj => findData.data.forEach( obj2 => {
-				if(obj[forData.key].toString() == obj2[findData.key].toString()) obj2[key] = keyv ? obj[keyv] : obj
+				// if(key === 'u_name'){
+				// 	console.log(obj[forData.key],obj2[findData.key])
+				// }
+				if(obj[forData.key] && obj2[findData.key] && (obj[forData.key].toString() == obj2[findData.key].toString())) {
+					if(keyv){
+						obj2[key] = obj[keyv]
+					} else if(key){
+						obj2[key] = obj
+					} else if(!key){
+						delete obj._id
+						Object.assign(obj2, obj)
+					}
+					// obj2[key] = keyv ? obj[keyv] : obj
+				}
 			})
 		)
 	}
+	//联表查询
 	async joint(parameter){
 		let setData = { 
 			id: 'u_id',//getObjectId的key
@@ -236,7 +253,6 @@ class Coll {
 		let setId = new Set()
 		fuseData.fitData.list.forEach( arr => setId.add(arr[fuseData.id]))
 		let arrId = Array.from(setId).map( id => this.getObjectId(id))
-		console.log(arrId)
 		let data = await this._find(fuseData.collection, {
 			_id: {
 				"$in": arrId
@@ -281,14 +297,14 @@ class Coll {
 
 	}
 	//默认当前登录人的_id
-	islogin(post, userInfo, key = 'u_id'){
-		let id = post[key]
-		try {
-			post[key] = id ? id : userInfo._id
-		} catch(e) {
-			return { state: false, mes: '如果不存在当前登录人，请传u_id'}
-		}
-	}
+	// islogin(post, ctx, key = 'u_id'){
+	// 	let id = post[key]
+	// 	try {
+	// 		post[key] = id ? id : ctx.session.userInfo._id
+	// 	} catch(e) {
+	// 		return { state: false, mes: `如果不存在当前登录人，请传${key}`}
+	// 	}
+	// }
 	//
 	getObjectId(id){ 
 		try {

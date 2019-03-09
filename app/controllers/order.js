@@ -1,7 +1,16 @@
 import db from '../models'
 import granary from '../plugins/granary'
+import News from './news'
+import { newObj } from '../utils/common'
+
 const coll = db.createCollection('order');
 const setNumber = ['o_price','o_num','o_state']
+function addNews(newPost){
+	Object.assign(newPost, {
+		n_type: 4,
+	})
+	News.publicAdd(newPost)
+}
 function getMap(post){
 	return {
 		'商品c_id不能为空': !post.c_id,
@@ -46,6 +55,7 @@ class Order {
 				post.s_id = cData.u_id//卖方id
 				post.c_title = cData.c_title
 				post.o_del = [];//软删除
+				addNews(newObj(post))
 				return await coll._addOne(post)
 			}
 		})
@@ -54,7 +64,7 @@ class Order {
 		await granary.aid(async get => {
 			coll.number(get, ...setNumber)
 			coll.vague(get, ...setNumber)
-			let projection = {u_name: 1,_id: 1}
+			let projection = {$projection: {u_account: 1}}
 			let oData = await coll._find(get);
 			//获取商品
 			await coll.joint({
@@ -62,44 +72,26 @@ class Order {
 				collection: 'commodity',
 				fitData: oData,
 				apiKey: 'commodity',
+				par: {$projection: {
+					c_detail: 0,
+				}}
 			})
-			// let cArr = oData.list.map( arr => coll.getObjectId(arr.c_id))
-			// let cData = await coll._find('commodity', {
-			// 	_id: {
-			// 		"$in": cArr
-			// 	}
-			// })
-			// coll.relation({data: cData.list, key: '_id'}, {data: oData.list, key: 'c_id'},'commodity')
 			//获取卖家
 			await coll.joint({
 				id: 's_id',
 				par: projection,
 				fitData: oData,
 				apiKey: 's_name',
-				fitAppointKey: 'u_name'
+				fitAppointKey: 'u_account'
 			})
-			// cArr = oData.list.map( arr => coll.getObjectId(arr.s_id))
-			// let sData = await coll._find('user', {
-			// 	_id: {
-			// 		"$in": cArr
-			// 	}
-			// }, {u_name: 1,_id: 1})
-			// coll.relation({data: sData.list, key: '_id'}, {data: oData.list, key: 's_id'}, 's_name', 'u_name')
 			//获取买家
 			await coll.joint({
 				id: 'b_id',
 				par: projection,
 				fitData: oData,
 				apiKey: 'b_name',
-				fitAppointKey: 'u_name'
+				fitAppointKey: 'u_account'
 			})
-			// cArr = oData.list.map( arr => coll.getObjectId(arr.b_id))
-			// let bData = await coll._find('user', {
-			// 	_id: {
-			// 		"$in": cArr
-			// 	}
-			// }, {u_name: 1,_id: 1})
-			// coll.relation({data: bData.list, key: '_id'}, {data: oData.list, key: 'b_id'},'b_name', 'u_name')
 			return oData
 		})
 	}
@@ -107,10 +99,9 @@ class Order {
 		await granary.aid(async post => {
 			let mes = granary.judge(getMap(post))
 			let _id = post.id
-			delete post.id
 			let data = {
-	          o_price: '',
-	          o_num: '',
+	          // o_price: '',
+	          // o_num: '',
 	          o_state: '',
 	        }
 	        let dbData = {} 
@@ -142,7 +133,24 @@ class Order {
 			}
 			dbData.o_num = dbData.o_num ? dbData.o_num : fData.o_num
 			setI !== 0 && setCom(fData, dbData, setI)
+			addNews(newObj(post))
+			delete dbData.id
 			return coll._upOne({_id}, dbData)
+		})
+	}
+	static async info(ctx){
+		await granary.aid( async get => {
+			let projection = {projection: {u_account: 1}}
+
+			let oData = await coll._findOne({_id: get.id})
+			//卖家
+			let sData = await coll._findOne('user', {_id: oData.s_id}, projection)
+			//买家
+			let bData = await coll._findOne('user', {_id: oData.b_id}, projection)
+			oData.s_name = sData.u_account
+			oData.b_name = bData.u_account
+			return oData
+
 		})
 	}
 	static async del(ctx){
