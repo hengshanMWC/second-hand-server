@@ -32,6 +32,7 @@ async function setCom(fData, dbData, n){
 	if(dbData.o_state == 3 || fData.o_state == 3) cData.c_sales += n * dbData.o_num//和3有关
 	coll._upOne('commodity', {_id: fData.c_id}, cData)
 }
+// {projection:{u_account: 1}}
 //订单
 class Order {
 	static async add(ctx) {
@@ -41,7 +42,12 @@ class Order {
 			if(mes){
 				return {state: false, mes}		
 			} else {
-				let cData = await coll._findOne('commodity', {_id: post.c_id})
+				let cData = await coll._findOne('commodity', {_id: post.c_id}, {projection:{
+					c_num: 1, 
+					c_price: 1,
+					u_id: 1,
+					c_title: 1
+				}})
 				if(post.o_num > cData.c_num) return {state: false, mes: '订单数量比商品数量多'}
 				if(post.o_price * post.o_num != cData.c_price * post.o_num) return {state: false, mes: '价格不对'}
 				post.o_state = post.o_state ? post.o_state : 1

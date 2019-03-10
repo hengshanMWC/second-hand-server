@@ -1,9 +1,18 @@
 import db from '../../models'
 import granary from '../../plugins/granary'
 const coll = db.createCollection();
-function order(id, n_content){
-
+function sTitle(title){
+	return `<h1 class="ql-align-center">${title}</h1>`
 }
+function orderContent(post){
+	str = `<p>订单号： ${post.l_id}</p>
+	<p>订单状态：${post.o_state}</p>
+	<p>操作人：${post.n_id}</p>
+	<p>卖家：${post.c_id}</p>
+	<p>买家：${post.b_id}</p>
+	<p>商品名：${post.c_title}</p>`
+}
+
 class NewsType {
 	static async core(post, setData){
 		if(post.n_type === 0 ){//公告
@@ -13,11 +22,13 @@ class NewsType {
 			//买卖家都加
 			NewsType.order(post)
 		} else if(post.n_type !== 0 && post.n_type !== 4){
+			let where = {_id: post.u_id}
 			let up = {
 				$inc: {
 					u_news: 1,
 				}
 			}
+
 			switch(post.n_type){
 				case 1://个人消息
 				await NewsType.other(post)
@@ -33,6 +44,9 @@ class NewsType {
 				break;
 				case 4://4订单
 				await NewsType.order(post)
+				where = {_id: {
+					"$in": [coll.getObjectId(post.c_id), coll.getObjectId(post.b_id)]
+				}}
 				break;
 				case 5://5商品评论
 				await NewsType.commodityComment(post)
@@ -41,7 +55,7 @@ class NewsType {
 				await NewsType.feedbackReply(post)
 				break;
 			} 
-			coll._upOne('user', {_id: post.u_id}, up)
+			coll._upOne('user', where, up)
 		}
 	}
 	//0公告
@@ -78,10 +92,52 @@ class NewsType {
 	}
 	//4订单
 	static async order(post){
+		let oData;
+		if(post.id){
+ 			oData = await coll._findOne('order', {_id: post.id}, {
+ 				projection: {
+ 					c_id: 1,
+ 					b_id: 1,
+ 					c_title: 1,
+ 				}
+ 			}) 
+			post.l_id = post.id;
+			post.c_id = oData.c_id
+			post.b_id = oData.b_id
+			post.t_id = oData.t_id
+		} else {
+			oData = await coll._findOne('order', {
+				c_id: post.c_id, 
+				b_id: post.b_id,
+				c_title: post.c_title,
+			}, {projection:{_id: 1}}) 
+			post.l_id = oData._id;
+		}
+		// let oData = await coll._findOne('order', {}) 
 		post.n_content = NewsType.orderContent(post)
 		//买方
 		const bTitle = []
 		console.log('order',post)
+		//新增
+		// { o_name: '12324234',
+		//    o_address: '123234234',
+		//    o_tel: '234234',
+		//    b_id: '5c4dbe05b88b272b497707ee',
+		//    c_id: '5c56fe4802d368732e661f5e',
+		//    o_state: 1,
+		//    o_price: 2222,
+		//    o_num: 1,
+		//    s_id: '5c4dbfbbb88b272b497707ef',
+		//    c_title: '李白传',
+		//    o_del: [],
+		//    n_type: 4,
+		//    n_content: undefined }
+
+		//修改状态
+	// 	{ id: '5c810ae35ff9b626637c42a1',
+		 // o_state: 3,
+		 // n_type: 4,
+		 // n_content: undefined }
 	}
 	
 	static orderContent(post){

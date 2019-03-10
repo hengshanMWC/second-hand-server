@@ -19,7 +19,7 @@ class News {
 		let b = granary.judge(map)
 		let setData = {
 				n_type: '',
-				n_content: '<h1>消息中心</h1>',
+				n_content: '<h1 class="ql-align-center">消息中心</h1>',
 				u_id: '',//指定某人的信息
 				n_id: '',//发布公告的人
 				l_id: '',//联系的id，例如认证上的，则认证id
