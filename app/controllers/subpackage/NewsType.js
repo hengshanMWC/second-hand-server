@@ -43,7 +43,6 @@ class NewsType {
 			}}
 			coll._upOne('user', where, up)
 		} else if(post.n_type !== 0 && post.n_type !== 4){
-			let where = {_id: post.u_id}
 			switch(post.n_type){
 				case 1://个人消息
 				await NewsType.other(post)
@@ -64,7 +63,7 @@ class NewsType {
 				await NewsType.feedbackReply(post)
 				break;
 			} 
-			coll._upOne('user', where, up)
+			coll._upOne('user', {_id: post.u_id}, up)
 		}
 	}
 	//0公告
