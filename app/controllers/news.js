@@ -24,14 +24,16 @@ class News {
 	}
 	static async publicAdd(post, u_static){
 		const map = {
-			'n_type:0-官方公告1-个人消息2-认证消息3-问题反馈4-商品信息5-商品评论': isNaN(post.n_type),
+			'n_type:0-官方公告1-个人消息2-认证消息3-问题反馈4-商品信息5-商品评论6-反馈回复': 
+			isNaN(post.n_type) 
+			&& post.n_type >= 0 
+			&& post.n_type <= 6,
 			// '内容不能为空n_content': !post.n_content,
 		}
 		let b = granary.judge(map)
 		if(b) return {state: false, mes: b}	
 		await NewsType.core(post)	
 		let data = News.data(post)
-		console.log('b_id',data)
 		return await coll._addOne(data)
 	}
 

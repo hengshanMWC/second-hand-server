@@ -170,7 +170,6 @@ class NewsType {
 		let newPost = newObj(post)
 		newPost.u_id = post.s_id;
 		let data = News.data(newPost)
-		console.log('s_id',data)
 		coll._addOne('news', data)
 	}
 	//5商品评论

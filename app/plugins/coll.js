@@ -114,16 +114,15 @@ class Coll {
 	async del(get){ 
 		let data;
 		let arrId = get.id;
-		if(arrId instanceof Array) {
-
+		if(arrId.indexOf(',') !== -1) {
+			data =  {
+				"$in": arrId.split(',').map(val => this.getObjectId(val))
+			}
+			return await this._del({_id: data})
 		} else {
-			data = await this._delOne({"_id": arrId})
+			data = arrId
+			return await this._delOne({_id: data})
 		}
-		// let arr =  ? get : [get]
-		// let arrId = arr.map( val => ({"_id": val.id}))
-		// console.log(arrId)
-		// let data = await db._del(arrId)
-		return data;
 	}
 	date(data, dates = [this.createDate, this.upDate]){
 		let timea = formatTime()
