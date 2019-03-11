@@ -8,19 +8,22 @@ function orderContent(post){
 	str = `<p>订单号： ${post.l_id}</p>
 	<p>订单状态：${post.o_state}</p>
 	<p>操作人：${post.n_id}</p>
-	<p>卖家：${post.c_id}</p>
+	<p>卖家：${post.s_id}</p>
 	<p>买家：${post.b_id}</p>
 	<p>商品名：${post.c_title}</p>`
 }
 
 class NewsType {
-	static async core(post, setData){
+	static async core(post){
+		let where;
 		if(post.n_type === 0 ){//公告
 			NewsType.notice(post)
-			setData.n_del = []//软删除
 		} else if(post.n_type === 4){//订单
 			//买卖家都加
-			NewsType.order(post)
+			await NewsType.order(post)
+			where = {_id: {
+				"$in": [coll.getObjectId(post.c_id), coll.getObjectId(post.b_id)]
+			}}
 		} else if(post.n_type !== 0 && post.n_type !== 4){
 			let where = {_id: post.u_id}
 			let up = {
@@ -28,7 +31,6 @@ class NewsType {
 					u_news: 1,
 				}
 			}
-
 			switch(post.n_type){
 				case 1://个人消息
 				await NewsType.other(post)
@@ -42,12 +44,6 @@ class NewsType {
 				case 3://反馈
 				await NewsType.feedback(post)
 				break;
-				case 4://4订单
-				await NewsType.order(post)
-				where = {_id: {
-					"$in": [coll.getObjectId(post.c_id), coll.getObjectId(post.b_id)]
-				}}
-				break;
 				case 5://5商品评论
 				await NewsType.commodityComment(post)
 				break;
@@ -55,6 +51,7 @@ class NewsType {
 				await NewsType.feedbackReply(post)
 				break;
 			} 
+			where = {_id: post.u_id}
 			coll._upOne('user', where, up)
 		}
 	}
@@ -93,6 +90,7 @@ class NewsType {
 	//4订单
 	static async order(post){
 		let oData;
+		//获取订单相关信息
 		if(post.id){
  			oData = await coll._findOne('order', {_id: post.id}, {
  				projection: {
@@ -107,14 +105,14 @@ class NewsType {
 			post.t_id = oData.t_id
 		} else {
 			oData = await coll._findOne('order', {
-				c_id: post.c_id, 
-				b_id: post.b_id,
+				s_id: post.s_id, //卖家
+				b_id: post.b_id,//买家
 				c_title: post.c_title,
 			}, {projection:{_id: 1}}) 
 			post.l_id = oData._id;
 		}
 		// let oData = await coll._findOne('order', {}) 
-		post.n_content = NewsType.orderContent(post)
+		await NewsType.orderGetUser(post)
 		//买方
 		const bTitle = []
 		console.log('order',post)
@@ -140,7 +138,11 @@ class NewsType {
 		 // n_content: undefined }
 	}
 	
-	static orderContent(post){
+	static async orderGetUser(post){
+		let pro = {projection:{u_account: 1}}
+		let sData = await coll._findOne('user', {_id: post.s_id}, pro)
+		let bData = await coll._findOne('user', {_id: post.b_id}, pro)
+		console.log(sData,bData) 
 		const title = [
 			'订单失效',//0
 			'商品信息',//1
