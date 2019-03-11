@@ -1,36 +1,49 @@
 import db from '../../models'
 import granary from '../../plugins/granary'
+import { newObj } from '../../utils/common'
+import News from '../news.js'
 const coll = db.createCollection();
+function fOrder(i){
+	const title = [
+		'订单失效',//0
+		'未发货',//1
+		'订单发货',//2
+		'订单交易成功'//3,
+	]
+	return title[i]
+}
 function sTitle(title){
 	return `<h1 class="ql-align-center">${title}</h1>`
 }
 function orderContent(post){
-	str = `<p>订单号： ${post.l_id}</p>
-	<p>订单状态：${post.o_state}</p>
-	<p>操作人：${post.n_id}</p>
-	<p>卖家：${post.s_id}</p>
-	<p>买家：${post.b_id}</p>
+	post.n_content = `${sTitle('订单消息')}<p>订单号： ${post.l_id}</p>
+	<p>订单状态：${post.stateText}</p>
+	<p>操作人：${post.n_account}</p>
+	<p>卖家：${post.s_account}</p>
+	<p>买家：${post.b_account}</p>
 	<p>商品名：${post.c_title}</p>`
 }
-
+function getOrderStateText(...arr){
+	return arr.map( val => fOrder(val)).join(' >>> ')
+}
 class NewsType {
 	static async core(post){
-		let where;
+		let up = {
+			$inc: {
+				u_news: 1,
+			}
+		}
 		if(post.n_type === 0 ){//公告
 			NewsType.notice(post)
 		} else if(post.n_type === 4){//订单
 			//买卖家都加
 			await NewsType.order(post)
-			where = {_id: {
+			let where = {_id: {
 				"$in": [coll.getObjectId(post.c_id), coll.getObjectId(post.b_id)]
 			}}
+			coll._upOne('user', where, up)
 		} else if(post.n_type !== 0 && post.n_type !== 4){
 			let where = {_id: post.u_id}
-			let up = {
-				$inc: {
-					u_news: 1,
-				}
-			}
 			switch(post.n_type){
 				case 1://个人消息
 				await NewsType.other(post)
@@ -51,7 +64,6 @@ class NewsType {
 				await NewsType.feedbackReply(post)
 				break;
 			} 
-			where = {_id: post.u_id}
 			coll._upOne('user', where, up)
 		}
 	}
@@ -89,33 +101,11 @@ class NewsType {
 	}
 	//4订单
 	static async order(post){
-		let oData;
-		//获取订单相关信息
-		if(post.id){
- 			oData = await coll._findOne('order', {_id: post.id}, {
- 				projection: {
- 					c_id: 1,
- 					b_id: 1,
- 					c_title: 1,
- 				}
- 			}) 
-			post.l_id = post.id;
-			post.c_id = oData.c_id
-			post.b_id = oData.b_id
-			post.t_id = oData.t_id
-		} else {
-			oData = await coll._findOne('order', {
-				s_id: post.s_id, //卖家
-				b_id: post.b_id,//买家
-				c_title: post.c_title,
-			}, {projection:{_id: 1}}) 
-			post.l_id = oData._id;
-		}
-		// let oData = await coll._findOne('order', {}) 
+		await NewsType.getOrder(post)
 		await NewsType.orderGetUser(post)
-		//买方
-		const bTitle = []
-		console.log('order',post)
+		orderContent(post)
+		NewsType.addOrderNew(post)
+		post.u_id = post.b_id;
 		//新增
 		// { o_name: '12324234',
 		//    o_address: '123234234',
@@ -137,18 +127,51 @@ class NewsType {
 		 // n_type: 4,
 		 // n_content: undefined }
 	}
-	
+	//获取订单相关信息
+	static async getOrder(post){
+		if(post.id){
+ 			let oData = await coll._findOne('order', {_id: post.id}, {
+ 				projection: {
+ 					c_id: 1,
+ 					s_id: 1,
+ 					b_id: 1,
+ 					c_title: 1,
+ 				}
+ 			}) 
+ 			let cData = await coll._findOne('commodity', {_id: oData.c_id}, {
+ 				projection: {c_title: 1}
+ 			})
+			post.l_id = post.id;
+			post.s_id = oData.s_id
+			post.b_id = oData.b_id
+			post.t_id = oData.t_id
+			post.c_title = cData.c_title
+			post.stateText = getOrderStateText(post.old_state, post.o_state)
+		} else {
+			let oData = await coll._findOne('order', {
+				s_id: post.s_id, //卖家
+				b_id: post.b_id,//买家
+				c_title: post.c_title,
+			}, {projection:{_id: 1}}) 
+			post.l_id = oData._id;
+			post.stateText = getOrderStateText(post.o_state)
+		}
+
+	}
+	//根据订单获取用户
 	static async orderGetUser(post){
 		let pro = {projection:{u_account: 1}}
 		let sData = await coll._findOne('user', {_id: post.s_id}, pro)
 		let bData = await coll._findOne('user', {_id: post.b_id}, pro)
-		console.log(sData,bData) 
-		const title = [
-			'订单失效',//0
-			'商品信息',//1
-			'订单发货',//2
-			'订单交易成功'//3,
-		]
+		post.s_account = sData.u_account
+		post.b_account = bData.u_account
+	}
+	static async addOrderNew(post){
+		let newPost = newObj(post)
+		newPost.u_id = post.s_id;
+		let data = News.data(newPost)
+		console.log('s_id',data)
+		coll._addOne('news', data)
 	}
 	//5商品评论
 	static commodityComment(post){

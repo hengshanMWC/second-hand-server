@@ -252,10 +252,10 @@ class Coll {
 		let fuseData = this.delFuse(parameter, setData)
 		let setId = new Set()
 		fuseData.fitData.list.forEach( arr => setId.add(arr[fuseData.id]))
-		let arrId = Array.from(setId).map( id => this.getObjectId(id))
+		// let arrId = Array.from(setId).map( id => id)
 		let data = await this._find(fuseData.collection, {
 			_id: {
-				"$in": arrId
+				"$in": Array.from(setId)
 			}
 		}, fuseData.par)
 		this.relation({

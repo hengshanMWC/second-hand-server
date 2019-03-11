@@ -5,7 +5,10 @@ import { newObj } from '../utils/common'
 
 const coll = db.createCollection('order');
 const setNumber = ['o_price','o_num','o_state']
-function addNews(newPost){
+function addNews(newPost,ctx){
+	let userInfo = ctx.session.userInfo
+	newPost.n_id = userInfo._id
+	newPost.n_account = userInfo.u_account
 	Object.assign(newPost, {
 		n_type: 4,
 	})
@@ -61,7 +64,7 @@ class Order {
 				post.s_id = cData.u_id//卖方id
 				post.c_title = cData.c_title
 				post.o_del = [];//软删除
-				addNews(newObj(post))
+				addNews(newObj(post),ctx)
 				return await coll._addOne(post)
 			}
 		})
@@ -139,7 +142,11 @@ class Order {
 			}
 			dbData.o_num = dbData.o_num ? dbData.o_num : fData.o_num
 			setI !== 0 && setCom(fData, dbData, setI)
-			addNews(newObj(post))
+			//消息
+			let newPost = newObj(post)
+			newPost.old_state = fData.o_state
+			addNews(newPost,ctx)
+
 			delete dbData.id
 			return coll._upOne({_id}, dbData)
 		})
