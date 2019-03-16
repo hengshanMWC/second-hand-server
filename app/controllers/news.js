@@ -32,7 +32,7 @@ class News {
 		}
 		let b = granary.judge(map)
 		if(b) return {state: false, mes: b}	
-		await NewsType.core(post)
+		await NewsType.core(post,u_static)
 		let data = News.data(post)
 		return await coll._addOne(data)
 	}

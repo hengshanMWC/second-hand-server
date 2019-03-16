@@ -2,12 +2,17 @@ import db from '../models'
 import granary from '../plugins/granary'
 const coll = db.createCollection('collection');
 //收藏
-class banner {
+export default class Collection {
 	static async add(ctx) {
-		await granary.aid(async post => coll._addOne(post))
+		await granary.aid(async post => {
+			const res = granary.islogin();
+			if(res) return res
+			return coll._addOne(post)
+		})
 	}
 	static async find(ctx){
 		await granary.aid(async get => {
+
 			let id = get.id
 			delete get.id
 			let data = Object.assign({_id: id}, get)
@@ -43,6 +48,8 @@ class banner {
 			if(get.id){
 				return await coll.del(get)
 			} else {
+				const res = granary.islogin();
+				if(res) return res
 				return await coll._delOne({
 					u_id: get.u_id,
 					c_id: get.c_id
@@ -52,4 +59,3 @@ class banner {
 	}
 	
 }
-export default banner 

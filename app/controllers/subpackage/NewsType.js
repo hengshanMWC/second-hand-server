@@ -27,7 +27,7 @@ function getOrderStateText(...arr){
 	return arr.map( val => fOrder(val)).join(' >>> ')
 }
 class NewsType {
-	static async core(post){
+	static async core(post,u_static){
 		let up = {
 			$inc: {
 				u_news: 1,
