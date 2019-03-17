@@ -31,6 +31,9 @@ class Commodity {
 				post.u_name = uData.u_name 
 				coll.number(post, ...setNumber)
 				post.c_sales = 0//销量
+				post.co_num = 0//订单评论
+				post.co_c_score = 0//订单总商品评分
+				post.co_s_score = 0//订单总服务评分
 				return coll._addOne(post)
 			})
 		})

@@ -11,7 +11,7 @@ function delFuse(post, setData){
 
 //消息中心
 class News {
-	static data(post){
+	static data(post, parm = {}){
 		let setData = {
 			n_type: '',
 			n_content: '<h1 class="ql-align-center">消息中心</h1>',
@@ -20,9 +20,9 @@ class News {
 			l_id: '',//联系的id，例如认证上的，则认证id
 			n_del: [],
 		}
-		return delFuse(post, setData)
+		return delFuse(post, Object.assign(setData,parm))
 	}
-	static async publicAdd(post, u_static){
+	static async publicAdd(post, aux){
 		const map = {
 			'n_type:0-官方公告1-个人消息2-认证消息3-问题反馈4-商品信息5-商品评论6-反馈回复': 
 			isNaN(post.n_type) 
@@ -32,8 +32,8 @@ class News {
 		}
 		let b = granary.judge(map)
 		if(b) return {state: false, mes: b}	
-		await NewsType.core(post,u_static)
-		let data = News.data(post)
+		let parm = await NewsType.core(post,aux)
+		let data = News.data(post, parm)
 		return await coll._addOne(data)
 	}
 

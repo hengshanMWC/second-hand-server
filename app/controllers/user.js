@@ -39,7 +39,7 @@ class User {
 	//拿到当前登录人信息
 	static async currentInfo(ctx) {
 		await granary.aid(async () => {
-			// coll._updateMany('user',{}, {$unset: {u_new: 1}})
+			// coll._updateMany('commodity',{}, {co_num: 0,co_c_score:0,co_s_score:0})
 			if(!ctx.session.userInfo) return {state: false, mes: '当前没有登录人'}
 			return await coll._findOne({_id: ctx.session.userInfo._id})
 		})

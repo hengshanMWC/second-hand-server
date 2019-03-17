@@ -10,6 +10,7 @@ import banner from './banner'
 import feedback from './feedback'
 import prove from './prove'
 import news from './news'
+import comment from './comment'
 const router = new Router
 router.prefix('/second-hand/api')
 // router.prefix('/second-hand/api/')//这样会找不到
@@ -25,4 +26,5 @@ router
 	.use('/feedback', feedback)//问题反馈
 	.use('/prove', prove)//认证
 	.use('/news', news)//消息
+	.use('/comment', comment)//评论
 export default router
