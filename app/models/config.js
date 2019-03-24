@@ -1,6 +1,6 @@
 var app={
 
-    dbUrl: 'mongodb://127.0.0.1:27017/',
+    dbUrl: 'mongodb://139.199.88.199:27017/',
 
     dbName: 'second_hand'
 

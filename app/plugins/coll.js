@@ -237,12 +237,13 @@ class Coll {
 			})
 		)
 	}
-	//联表查询
-	async joint(parameter){
+	//列表查询
+	async linked(parameter){
 		let setData = { 
 			id: 'u_id',//getObjectId的key
 			collection: 'user', //表名
-			par: {},//筛选之类
+			screen: {},//列表筛选
+			par: {},//字段筛选之类
 			fitData: {},//获得数据的对象
 			giveMateKey: '_id',//给予数据的对比key 
 			apiKey: '',//fitData的key用来获取数据
@@ -251,12 +252,19 @@ class Coll {
 		let fuseData = this.delFuse(parameter, setData)
 		let setId = new Set()
 		fuseData.fitData.list.forEach( arr => setId.add(arr[fuseData.id]))
-		// let arrId = Array.from(setId).map( id => id)
-		let data = await this._find(fuseData.collection, {
-			_id: {
+		let screen = {
+			[fuseData.giveMateKey]: {
 				"$in": Array.from(setId)
-			}
-		}, fuseData.par)
+			},
+			
+		}
+		Object.assign(screen,fuseData.screen)
+		let data = await this._find(fuseData.collection, screen, fuseData.par)
+		return {data, fuseData}
+	}
+	//联表查询合并
+	async joint(parameter){
+		let { data, fuseData } = await this.linked(parameter)
 		this.relation({
 			data: data.list, 
 			key: fuseData.giveMateKey
