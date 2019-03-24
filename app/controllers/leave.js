@@ -2,22 +2,21 @@ import db from '../models'
 import granary from '../plugins/granary'
 import News from './news'
 const coll = db.createCollection('news');
-const setNumbe = ['l_reliable', 'l_fine', 'n_type']
+const setNumbe = ['c_score', 's_score']
 
-//购买评论
-class Comment {
+//商品留言
+export default class Leave {
 	static async add(ctx) {
 		await granary.aid(async post => {
 			coll.number(post, ...setNumbe)
-			post.n_type = 7;
+			post.n_type = 5;
 			return await News.publicAdd(post)
 		})
 	}
 	static async find(ctx){
 		await granary.aid(async get => {
 			coll.number(get, ...setNumbe)
-			// coll.vague(get, ...setNumbe);
-			get.n_type = 7
+			coll.vague(get, ...setNumbe);
 			return coll._find(get)
 		})
 	}
@@ -32,9 +31,8 @@ class Comment {
 	// 		return coll._upOne({_id: id}, post)
 	// 	})
 	// }
-	static async del(ctx){
-		await granary.aid( async get => coll.del(get))
-	}
+	// static async del(ctx){
+	// 	await granary.aid( async get => coll.del(get))
+	// }
 	
 }
-export default Comment 

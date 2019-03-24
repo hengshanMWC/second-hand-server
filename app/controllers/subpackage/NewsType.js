@@ -61,11 +61,14 @@ class NewsType {
 				case 3://反馈
 				await NewsType.feedback(post)
 				break;
-				case 5://5商品评论
-				await NewsType.commodityComment(post, parm)
+				case 5://5商品留言
+				await NewsType.commodityLeave(post, parm)
 				break;
 				case 6://6问题回复
 				await NewsType.feedbackReply(post)
+				break;
+				case 7://7订单评价
+				await NewsType.orderComment(post,parm)
 				break;
 			} 
 			if(post.u_id){
@@ -179,33 +182,48 @@ class NewsType {
 		let data = News.data(newPost)
 		coll._addOne('news', data)
 	}
-	//5商品评论
-	static async commodityComment(post, parm){
+	//5商品留言
+	static async commodityLeave(post, parm){
 		const res = granary.islogin(post, 'n_id');
 		if(res) return res
-		// 订单评论
-		if(post.o_id){
-			await NewsType.orderComment(post)
-			parm.o_id = ''//订单
-			parm.c_score = ''//	商品评分
-			parm.s_score = ''//	服务评分
-		//商品楼中楼
-		} else if(post.ent_id){
-			await NewsType.comments(post, parm)//评论
+
+		//商品层留言
+		if(post.ent_id){
 			parm.ent_id = ''//评论id
-		//商品评论
+			await NewsType.layerLeave(post, parm)//评论
+		//商品留言
 		} else {
-			await NewsType.cc(post)
+			await NewsType.leave(post, layerLeave)
 		}
 	}
-	//订单评论
-	static async orderComment(post){
-		// let nData = await coll._findOne('news', {_id: post.reply_id}, {$projection: {
-		// 	n_id: 1
-		// }})
+	//7订单评论
+	static async orderComment(post, parm){
+		parm.o_id = ''//订单
+		parm.l_reliable = '' //靠谱度		
+		parm.l_fine = '' //性价比
+		//获取卖家
+		let oData = await coll._findOne('order', {_id: post.o_id}, {
+			s_id: 1,
+		})
+		const res = granary.islogin(post, 'n_id');
+		if(res) return res
+		post.u_id = post.l_id = oData.s_id
+		//卖家增加
+		coll._upOne('user', {_id: post.u_id}, {
+			$inc: {
+				l_reliable: post.l_reliable, //靠谱度
+				l_fine: post.l_fine, //性价比
+			}
+		})
+		//订单已经评价
+		coll._upOne('order', {_id: post.o_id}, {
+			$set: {
+				o_evaluate: true,//已经评价
+			}
+		})
 	}
 	//回复：
-	static async commentReply(post, parm) {
+	static async reply(post, parm) {
 		let nData = await coll._findOne('news', {_id: post.reply_id}, {$projection: {
 			n_id: 1
 		}})
@@ -222,7 +240,7 @@ class NewsType {
 		}
 	}
 	//楼中楼评论：根据ent_id获得评论消息的发布人
-	static async comments(post, parm){
+	static async layerLeave(post, parm){
 		let nData = await coll._findOne('news', {_id: post.ent_id}, {$projection: {
 			n_id: 1
 		}})
@@ -232,11 +250,11 @@ class NewsType {
 		}
 		if(post.reply_id){
 			parm.reply_id = ''//评论id
-			NewsType.orderComment(newObj(post), parm)
+			NewsType.reply(newObj(post), parm)
 		}
 	}
-	//商品评论：根据l_id获取商品的发布人
-	static async cc(post){
+	//商品留言：根据l_id获取商品的发布人
+	static async leave(post, fn){
 		let cData = await coll._findOne('commodity', {_id: post.l_id}, {$projection: {
 			u_id: 1
 		}})

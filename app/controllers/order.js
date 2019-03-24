@@ -64,6 +64,7 @@ class Order {
 				post.s_id = cData.u_id//卖方id
 				post.c_title = cData.c_title
 				post.o_del = [];//软删除
+				post.o_evaluate = false;//是否评论
 				addNews(newObj(post),ctx)
 				return await coll._addOne(post)
 			}
