@@ -193,7 +193,7 @@ class NewsType {
 			await NewsType.layerLeave(post, parm)//评论
 		//商品留言
 		} else {
-			await NewsType.leave(post, layerLeave)
+			await NewsType.leave(post)
 		}
 	}
 	//7订单评论
@@ -230,7 +230,7 @@ class NewsType {
 			n_id: 1
 		}})
 		//回复者和楼中楼是否同一个人
-		if(post.n_id !== nData.n_id){
+		if(post.n_id != nData.n_id){
 			post.u_id = nData.n_id
 			//楼中楼+消息
 			coll._upOne('user', {_id: post.u_id}, {
@@ -247,7 +247,7 @@ class NewsType {
 			n_id: 1
 		}})
 		//评论者和层主是否同一个人
-		if(post.n_id !== nData.n_id){
+		if(post.n_id != nData.n_id){
 			post.u_id = nData.n_id
 		}
 		if(post.reply_id){
@@ -256,12 +256,12 @@ class NewsType {
 		}
 	}
 	//商品留言：根据l_id获取商品的发布人
-	static async leave(post, fn){
+	static async leave(post){
 		let cData = await coll._findOne('commodity', {_id: post.l_id}, {$projection: {
 			u_id: 1
 		}})
 		//评论者和卖家是否同一个人
-		if(post.n_id !== cData.u_id){
+		if(post.n_id != cData.u_id){
 			post.u_id = cData.u_id
 		}
 		

@@ -74,7 +74,7 @@ class Order {
 		await granary.aid(async get => {
 			coll.number(get, ...setNumber)
 			coll.vague(get, ...setNumber)
-			let projection = {$projection: {u_account: 1}}
+			let projection = {u_account: 1}
 			let oData = await coll._find(get);
 			//获取商品
 			await coll.joint({
@@ -82,9 +82,9 @@ class Order {
 				collection: 'commodity',
 				fitData: oData,
 				apiKey: 'commodity',
-				par: {$projection: {
+				par: {
 					c_detail: 0,
-				}}
+				}
 			})
 			//获取卖家
 			await coll.joint({
