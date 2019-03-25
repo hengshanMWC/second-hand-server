@@ -10,7 +10,10 @@ export default {
 		Object.assign(post, {
 			power,//管理员,布尔值
 			u_apply: {u_static: 0},//审核状态，判断是否审核中，
-			u_news: 0//新闻
+			u_news: 0,//新闻
+			l_reliable: 0,//靠谱度
+			l_fine:0,//性价比
+			l_num:0,//评价人数
 		})
 		bDef.forEach( val => post[val] = post[val] === true ? true : false)
 		Object.keys(def).forEach( val => post[val] = post[val] ? post[val] : def[val])
@@ -22,6 +25,16 @@ export default {
 		coll.number(get, ...aN)
 		coll.vague(get, ...aB,...aN)
 		get.power = power
-		return {u_password: 0, u_age: 0, u_qq: 0, u_mail: 0}
+		return {$projection:{
+			u_password: 0, 
+			u_age: 0, 
+			u_qq: 0, 
+			u_mail: 0,
+			u_avatar: 0,
+			u_apply: 0,
+			l_fine: 0,
+			l_num: 0,
+			l_reliable: 0,
+		}}
 	}
 }
