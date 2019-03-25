@@ -18,7 +18,36 @@ class Comment {
 			coll.number(get, ...setNumbe)
 			// coll.vague(get, ...setNumbe);
 			get.n_type = 7
-			return coll._find(get)
+			let cList = await coll._find(get, {
+				$projection: {
+					n_del: 0,
+					up_date: 0,
+				}
+			})
+			//获取评价人信息
+			await coll.joint({
+				id: 'n_id',
+				par: {
+					u_account: 1,
+					u_school: 1,
+					u_avatar: 1,
+				},
+				fitData: cList,
+				apiKey: 'n_user',
+			})
+			//获取商品名称
+			await coll.joint({
+				collection: 'order',
+				id: 'o_id',
+				par: {
+					c_title: 1,
+				},
+				fitData: cList,
+				apiKey: 'c_title',
+				fitAppointKey: 'c_title',
+			})
+			return cList
+
 		})
 	}
 	// static async info(ctx) {

@@ -60,7 +60,7 @@ class NewsType {
 				break;
 				case 3://反馈
 				await NewsType.feedback(post)
-				break;
+				break;	
 				case 5://5商品留言
 				await NewsType.commodityLeave(post, parm)
 				break;

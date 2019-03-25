@@ -48,7 +48,8 @@ class News {
 				u_account: 1
 			}
 			let nData = await coll._find(get, {$projection: {
-				n_content: 0
+				n_content: 0,
+				n_del: 0,
 			}}) 
 			//获取发布人
 			await coll.joint({
