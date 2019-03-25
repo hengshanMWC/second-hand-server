@@ -186,7 +186,6 @@ class NewsType {
 	static async commodityLeave(post, parm){
 		const res = granary.islogin(post, 'n_id');
 		if(res) return res
-
 		//商品层留言
 		if(post.ent_id){
 			parm.ent_id = ''//评论id
@@ -195,6 +194,63 @@ class NewsType {
 		} else {
 			await NewsType.leave(post)
 		}
+	}
+	//商品留言：根据l_id获取商品的发布人
+	static async leave(post){
+		let cData = await coll._findOne('commodity', {_id: post.l_id}, {$projection: {
+			u_id: 1
+		}})
+		//评论者和卖家是否同一个人
+		if(post.n_id != cData.u_id){
+			post.u_id = cData.u_id
+		}
+		
+	}
+	//楼中楼评论：根据ent_id获得评论消息的发布人
+	static async layerLeave(post, parm){
+		let nData = await coll._findOne('news', {_id: post.ent_id}, {$projection: {
+			n_id: 1
+		}})
+		//评论者和层主是否同一个人
+		if(post.n_id != nData.n_id){
+			post.u_id = nData.n_id
+		}
+		if(post.reply_id){
+			parm.reply_id = ''//评论id
+			NewsType.reply(newObj(post), newObj(parm), nData.n_id)
+		}
+	}
+	//回复：
+	static async reply(post, parm, n_id) {
+		let nData = await coll._findOne('news', {_id: post.reply_id}, {$projection: {
+			n_id: 1
+		}})
+		//回复者和被回复者是否同一个人.
+		//如果层主，和被回复是同一个人，只能生成一条信息
+		if(post.n_id != nData.n_id && nData.n_id != n_id){
+			post.u_id = nData.n_id
+			//楼中楼+消息
+			coll._upOne('user', {_id: post.u_id}, {
+				$inc: {
+					u_news: 1,
+				}
+			})
+			coll._addOne('news', News.data(post, parm))
+		}
+	}
+	static async createLeave(data){
+		data.really = true//评论
+		coll._addOne('news', data)
+	}
+	//6问题回复
+	static async feedbackReply(post){
+		let fData = await coll._findOne('feedback', {_id: post.id},{$projection: {
+			u_id: 1
+		}})
+		post.l_id = post.id
+		post.n_id = post.u_id
+		post.u_id = fData.u_id
+		post.n_content = post.f_content
 	}
 	//7订单评论
 	static async orderComment(post, parm){
@@ -223,58 +279,6 @@ class NewsType {
 				o_evaluate: true,//已经评价
 			}
 		})
-	}
-	//回复：
-	static async reply(post, parm) {
-		let nData = await coll._findOne('news', {_id: post.reply_id}, {$projection: {
-			n_id: 1
-		}})
-		//回复者和楼中楼是否同一个人
-		if(post.n_id != nData.n_id){
-			post.u_id = nData.n_id
-			//楼中楼+消息
-			coll._upOne('user', {_id: post.u_id}, {
-				$inc: {
-					u_news: 1,
-				}
-			})
-			coll._addOne('news', News.data(post, parm))
-		}
-	}
-	//楼中楼评论：根据ent_id获得评论消息的发布人
-	static async layerLeave(post, parm){
-		let nData = await coll._findOne('news', {_id: post.ent_id}, {$projection: {
-			n_id: 1
-		}})
-		//评论者和层主是否同一个人
-		if(post.n_id != nData.n_id){
-			post.u_id = nData.n_id
-		}
-		if(post.reply_id){
-			parm.reply_id = ''//评论id
-			NewsType.reply(newObj(post), parm)
-		}
-	}
-	//商品留言：根据l_id获取商品的发布人
-	static async leave(post){
-		let cData = await coll._findOne('commodity', {_id: post.l_id}, {$projection: {
-			u_id: 1
-		}})
-		//评论者和卖家是否同一个人
-		if(post.n_id != cData.u_id){
-			post.u_id = cData.u_id
-		}
-		
-	}
-	//6问题回复
-	static async feedbackReply(post){
-		let fData = await coll._findOne('feedback', {_id: post.id},{$projection: {
-			u_id: 1
-		}})
-		post.l_id = post.id
-		post.n_id = post.u_id
-		post.u_id = fData.u_id
-		post.n_content = post.f_content
 	}
 }
 export default NewsType

@@ -1,6 +1,8 @@
 import db from '../models'
 import granary from '../plugins/granary'
 import NewsType from './subpackage/NewsType'
+import { newObj } from '../utils/common'
+
 const coll = db.createCollection('news');//个人,认证，反馈
 const setNumbe = ['n_type']
 function delFuse(post, setData){
@@ -34,6 +36,7 @@ class News {
 		if(b) return {state: false, mes: b}	
 		let parm = await NewsType.core(post,aux)
 		let data = News.data(post, parm)
+		if(post.n_type === 5) NewsType.createLeave(newObj(data))
 		return await coll._addOne(data)
 	}
 
