@@ -20,13 +20,13 @@ export default class Leave {
 			get.l_id = get.id;
 			delete get.id
 			let list = await coll.find(get)
-			if(list.list.length){
-				Leave.list(list)
-			}
+			await Leave.list(list)
 			return list
 		})
 	}
 	static async list(list){
+		let len = list.list.length
+		if(len === 0) return
 		
 	}
 	//根据层主评论获取评论

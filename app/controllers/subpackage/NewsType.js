@@ -201,6 +201,7 @@ class NewsType {
 		parm.o_id = ''//订单
 		parm.l_reliable = '' //靠谱度		
 		parm.l_fine = '' //性价比
+		post.n_content = post.l_content
 		//获取卖家
 		let oData = await coll._findOne('order', {_id: post.o_id}, {
 			s_id: 1,
