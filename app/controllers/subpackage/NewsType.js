@@ -214,6 +214,7 @@ class NewsType {
 			$inc: {
 				l_reliable: post.l_reliable, //靠谱度
 				l_fine: post.l_fine, //性价比
+				l_num: 1,
 			}
 		})
 		//订单已经评价
