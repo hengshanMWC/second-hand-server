@@ -1,7 +1,7 @@
 import db from '../models'
 import granary from '../plugins/granary'
 import News from './news'
-const coll = db.createCollection('news');
+const coll = db.createCollection('leave');
 const setNumbe = ['c_score', 's_score']
 
 //商品留言
@@ -16,10 +16,9 @@ export default class Leave {
 	//根据商品id获取留言
 	static async commodityList(ctx){
 		await granary.aid(async get => {
-			get.n_type = 5;
 			get.l_id = get.id;
 			delete get.id
-			let list = await coll.find(get)
+			let list = await coll._find(get)
 			await Leave.list(list)
 			return list
 		})

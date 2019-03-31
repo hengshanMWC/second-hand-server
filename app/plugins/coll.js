@@ -259,7 +259,7 @@ class Coll {
 			
 		}
 		Object.assign(screen,fuseData.screen)
-		let data = await this._find(fuseData.collection, screen, fuseData.par)
+		let data = await this._find(fuseData.collection, screen, {$projection:fuseData.par})
 		return {data, fuseData}
 	}
 	//联表查询合并

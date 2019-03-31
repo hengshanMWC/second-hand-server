@@ -1,7 +1,7 @@
 import db from '../models'
 import granary from '../plugins/granary'
 import News from './news'
-const coll = db.createCollection('news');
+const coll = db.createCollection('comment');
 const setNumbe = ['l_reliable', 'l_fine', 'n_type']
 
 //购买评论
@@ -17,11 +17,11 @@ class Comment {
 		await granary.aid(async get => {
 			coll.number(get, ...setNumbe)
 			// coll.vague(get, ...setNumbe);
-			get.n_type = 7
 			let cList = await coll._find(get, {
 				$projection: {
 					n_del: 0,
 					up_date: 0,
+					u_id: 0,
 				}
 			})
 			//获取评价人信息

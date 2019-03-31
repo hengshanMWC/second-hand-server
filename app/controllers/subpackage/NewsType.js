@@ -208,27 +208,28 @@ class NewsType {
 	}
 	//楼中楼评论：根据ent_id获得评论消息的发布人
 	static async layerLeave(post, parm){
-		let nData = await coll._findOne('news', {_id: post.ent_id}, {$projection: {
+		let lData = await coll._findOne('leave', {_id: post.ent_id}, {$projection: {
 			n_id: 1
 		}})
 		//评论者和层主是否同一个人
-		if(post.n_id != nData.n_id){
-			post.u_id = nData.n_id
+		if(post.n_id != lData.n_id){
+			post.u_id = lData.n_id
 		}
 		if(post.reply_id){
 			parm.reply_id = ''//评论id
-			NewsType.reply(newObj(post), newObj(parm), nData.n_id)
+			NewsType.reply(newObj(post), newObj(parm), lData.n_id.toString())
 		}
 	}
 	//回复：
 	static async reply(post, parm, n_id) {
-		let nData = await coll._findOne('news', {_id: post.reply_id}, {$projection: {
+		let lData = await coll._findOne('leave', {_id: post.reply_id}, {$projection: {
 			n_id: 1
 		}})
+		// console.log(typeof lData.n_id)
 		//回复者和被回复者是否同一个人.
 		//如果层主，和被回复是同一个人，只能生成一条信息
-		if(post.n_id != nData.n_id && nData.n_id != n_id){
-			post.u_id = nData.n_id
+		if(post.n_id != lData.n_id && n_id != lData.n_id){
+			post.u_id = lData.n_id
 			//楼中楼+消息
 			coll._upOne('user', {_id: post.u_id}, {
 				$inc: {
@@ -238,9 +239,19 @@ class NewsType {
 			coll._addOne('news', News.data(post, parm))
 		}
 	}
-	static async createLeave(data){
-		data.really = true//评论
-		coll._addOne('news', data)
+	static async createOther(data){
+		let text;
+		switch(data.n_type){
+			case 5:
+			text = 'leave'
+			break;
+			case 7:
+			delete data.l_id
+			text = 'comment'
+			break;
+		}
+		delete data.n_type
+		if(text) coll._addOne(text, data)
 	}
 	//6问题回复
 	static async feedbackReply(post){
@@ -255,16 +266,19 @@ class NewsType {
 	//7订单评论
 	static async orderComment(post, parm){
 		parm.o_id = ''//订单
+		parm.c_id = '' //商品id
 		parm.l_reliable = '' //靠谱度		
 		parm.l_fine = '' //性价比
 		post.n_content = post.l_content
 		//获取卖家
 		let oData = await coll._findOne('order', {_id: post.o_id}, {
 			s_id: 1,
+			c_id: 1,
 		})
 		const res = granary.islogin(post, 'n_id');
 		if(res) return res
 		post.u_id = post.l_id = oData.s_id
+		post.c_id =  oData.c_id
 		//卖家增加
 		coll._upOne('user', {_id: post.u_id}, {
 			$inc: {

@@ -36,8 +36,16 @@ class News {
 		if(b) return {state: false, mes: b}	
 		let parm = await NewsType.core(post,aux)
 		let data = News.data(post, parm)
-		if(post.n_type === 5) NewsType.createLeave(newObj(data))
-		return await coll._addOne(data)
+		NewsType.createOther(newObj(data))
+		if(data.n_type === 0 || data.u_id){
+			return await coll._addOne(data)
+		} else {
+			return {
+		        "n": 1,
+		        "ok": 1
+		    }
+		}
+		
 	}
 
 	static async add(ctx) {
