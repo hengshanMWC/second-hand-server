@@ -1,5 +1,4 @@
 class Granary {
-	constructor(){}
 	async aid(fn){
 		let {context: ctx,reqData} = this
 		let res = {

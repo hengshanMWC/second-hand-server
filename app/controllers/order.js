@@ -45,7 +45,7 @@ class Order {
 			if(mes){
 				return {state: false, mes}		
 			} else {
-				let cData = await coll._findOne('commodity', {_id: post.c_id}, {projection:{
+				let cData = await coll._findOne('commodity', {_id: post.c_id}, { projection: {
 					c_num: 1, 
 					c_price: 1,
 					u_id: 1,
@@ -63,7 +63,6 @@ class Order {
 				}
 				post.s_id = cData.u_id//卖方id
 				post.c_title = cData.c_title
-				post.o_del = [];//软删除
 				post.o_evaluate = false;//是否评论
 				addNews(newObj(post),ctx)
 				return await coll._addOne(post)
@@ -71,38 +70,51 @@ class Order {
 		})
 	}
 	static async find(ctx){
+		await granary.aid(async get => await Order.list(get))
+	}
+	static async clientFind(ctx){
 		await granary.aid(async get => {
-			coll.number(get, ...setNumber)
-			coll.vague(get, ...setNumber)
-			let projection = {u_account: 1}
-			let oData = await coll._find(get);
-			//获取商品
-			await coll.joint({
-				id: 'c_id',
-				collection: 'commodity',
-				fitData: oData,
-				apiKey: 'commodity',
-				par: {
-					c_detail: 0,
-				}
-			})
-			//获取卖家
-			await coll.joint({
-				id: 's_id',
-				par: projection,
-				fitData: oData,
-				apiKey: 's_name',
-				fitAppointKey: 'u_account'
-			})
-			//获取买家
-			await coll.joint({
-				id: 'b_id',
-				par: projection,
-				fitData: oData,
-				apiKey: 'b_name',
-				fitAppointKey: 'u_account'
-			})
-			return oData
+			// get.
+			const res = granary.islogin(get, 'b_id');
+			if(res) return res
+			get._id = await coll.softFind(get, 'del_order', {b_id: coll.getObjectId(get.b_id)})
+			return await Order.list(get)
+		})
+	}
+	static async list(get){
+		coll.number(get, ...setNumber)
+		coll.vague(get, ...setNumber)
+		let oData = await coll._find(get);
+		await Order.joint(oData)
+		return oData
+	}
+	static async joint(oData){
+		let projection = {u_account: 1}
+		//获取商品
+		await coll.joint({
+			id: 'c_id',
+			collection: 'commodity',
+			fitData: oData,
+			apiKey: 'commodity',
+			par: {
+				c_detail: 0,
+			}
+		})
+		//获取卖家
+		await coll.joint({
+			id: 's_id',
+			par: projection,
+			fitData: oData,
+			apiKey: 's_name',
+			fitAppointKey: 'u_account'
+		})
+		//获取买家
+		await coll.joint({
+			id: 'b_id',
+			par: projection,
+			fitData: oData,
+			apiKey: 'b_name',
+			fitAppointKey: 'u_account'
 		})
 	}
 	static async upInfo(ctx){
@@ -172,7 +184,7 @@ class Order {
 	}
 	//软删除
 	static async softDel(ctx){
-		await granary.aid( async get => coll._upOne({_id: get.id}, {$push: {o_del: get.u_id}}))
+		await granary.aid( async get => await coll.softDel(get, 'del_order'))
 	}
 }
 export default Order

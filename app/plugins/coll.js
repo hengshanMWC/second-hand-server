@@ -101,6 +101,30 @@ class Coll {
 				})
 		})
 	}
+	//软查询
+	async softFind(get, key ,query = {
+			_id: get.u_id
+		}){
+		console.log(query)
+		const uData = await this._findOne('user', query , {
+			projection: {
+				[key]: 1,
+			}
+		})
+		return {
+			$nin: uData[key]
+		}
+	}
+	//软删除
+	async softDel(get, key){
+		return this._upOne('user', {
+			_id: get.u_id
+		}, {
+			$addToSet: {
+				[key]:  this.getObjectId(get.id)
+			}
+		})
+	}
 	aggregate(collectionName, json){
 		let {name, data} = this.reqData(collectionName, json)
 		this.automaticId(json)

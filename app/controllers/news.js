@@ -20,7 +20,6 @@ class News {
 			u_id: '',//指定某人的信息
 			n_id: '',//发布公告的人
 			l_id: '',//联系的id，例如认证上的，则认证id
-			n_del: [],
 		}
 		return delFuse(post, Object.assign(setData,parm))
 	}
@@ -52,35 +51,76 @@ class News {
 		await granary.aid(async post => await News.publicAdd(post))
 	}
 	static async find(ctx){
+		await granary.aid(async get => await News.list(get))
+	}
+	static async clientFind(ctx) {
 		await granary.aid(async get => {
-			coll.number(get, ...setNumbe)
-			coll.vague(get, ...setNumbe)
-			let projection = {
-				u_account: 1
-			}
-			let nData = await coll._find(get, {$projection: {
-				n_content: 0,
-				n_del: 0,
-			}}) 
-			//获取发布人
-			await coll.joint({
-				id: 'n_id',
-				par: projection,
-				fitData: nData,
-				apiKey: 'n_name',
-				fitAppointKey: 'u_account'
-			})
-			
-			//获取指定人
-			await coll.joint({
-				par: projection,
-				fitData: nData,
-				apiKey: 'u_name',
-				fitAppointKey: 'u_account'
-			})
-			
-			
-			return nData
+			// get.
+			const res = granary.islogin();
+			if(res) return res
+			let _id = await coll.softFind(get, 'del_news')
+			get.$and = [
+				{_id},//软删除
+				{
+					$or: [
+						{
+							u_id: coll.getObjectId(get.u_id)//用户
+						},
+						{n_type: 0}//公告
+					]
+				}
+				
+			]
+			// get.$or = [
+			// 	{
+			// 		$and: [
+			// 			{_id},
+			// 			{
+			// 				u_id: coll.getObjectId(get.u_id)
+			// 			}
+						
+			// 		]
+					
+			// 	},
+			// 	{
+			// 		$and: [
+			// 			{_id},
+			// 			{n_type: 0}
+			// 		]
+			// 	}
+			// ]
+			delete get.u_id
+			return await News.list(get)
+		})
+	}
+	static async list(get){
+		coll.number(get, ...setNumbe)
+		coll.vague(get, ...setNumbe)
+		console.log(JSON.stringify(get))
+		let nData = await coll._find(get, {$projection: {
+			n_content: 0,
+		}}) 
+		await News.joint(nData)
+		return nData
+	}
+	static async joint(nData){
+		let projection = {
+			u_account: 1
+		}
+		//获取发布人
+		await coll.joint({
+			id: 'n_id',
+			par: projection,
+			fitData: nData,
+			apiKey: 'n_name',
+			fitAppointKey: 'u_account'
+		})
+		//获取指定人
+		await coll.joint({
+			par: projection,
+			fitData: nData,
+			apiKey: 'u_name',
+			fitAppointKey: 'u_account'
 		})
 	}
 	static async info(ctx) {
@@ -112,14 +152,18 @@ class News {
 	}
 	//软删除
 	static async softDel(ctx){
-		await granary.aid( async get => coll._upOne({_id: get.id}, {$push: {n_del: get.u_id}}))
+		await granary.aid( async get => await coll.softDel(get, 'del_news'))
 	}
 	//清空消息提示
 	static async empty(ctx){
 		await granary.aid( async get => {
 			const res = granary.islogin();
 			if(res) return res
-			return await coll._upOne('user', {_id: get.u_id}, {u_news: 0})
+			return await coll._upOne('user', {_id: get.u_id}, {
+				$set: {
+					u_news: 0
+				}
+			})
 		})
 	}
 }
