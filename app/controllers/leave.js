@@ -54,7 +54,6 @@ export default class Leave {
 			return reverse(data)
 		})
 	}
-	
 	//层里面的评论磨光
 	static async listPolish(data){
 

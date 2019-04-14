@@ -39,13 +39,15 @@ class NewsType {
 		if(post.n_type === 0 ){//公告
 			NewsType.notice(post)
 		} else if(post.n_type === 4){//订单
+			parm.old_state = ''
+			parm.o_state = ''
+			parm.c_title = ''
 			//买卖家都加
 			await NewsType.order(post)
 			let where = {_id: {
 				"$in": [coll.getObjectId(post.c_id), coll.getObjectId(post.b_id)]
 			}}
-			parm.old_state = ''
-			parm.o_state = ''
+			
 			coll._upOne('user', where, up)
 		} else if(post.n_type !== 0 && post.n_type !== 4){
 			switch(post.n_type){
@@ -176,10 +178,11 @@ class NewsType {
 		post.s_account = sData.u_account
 		post.b_account = bData.u_account
 	}
-	static async addOrderNew(post){
+	static async addOrderNew(post, parm){
 		let newPost = newObj(post)
 		newPost.u_id = post.s_id;
-		let data = News.data(newPost)
+		let data = News.data(newPost,parm)
+		console.log('add',data)
 		coll._addOne('news', data)
 	}
 	//5商品留言

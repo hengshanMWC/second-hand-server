@@ -35,6 +35,7 @@ export default {
 			l_fine: 0,
 			l_num: 0,
 			l_reliable: 0,
+			u_avatar: 0,
 		}}
 	}
 }

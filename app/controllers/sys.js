@@ -9,7 +9,7 @@ class Sys {
 	//管理员列表
 	static async find(ctx){
 		await granary.aid(async get => {
-			return await coll._find(get, fnUser.find(get, true, coll), )
+			return await coll._find(get, fnUser.find(get, true, coll))
 		})
 	}
 	//添加管理员
