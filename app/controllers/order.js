@@ -77,7 +77,7 @@ class Order {
 			// get.
 			const res = granary.islogin(get, 'b_id');
 			if(res) return res
-			get._id = await coll.softFind(get, 'del_order', {b_id: coll.getObjectId(get.b_id)})
+			get._id = await coll.softFind(get, 'del_order', {_id: get.b_id})
 			return await Order.list(get)
 		})
 	}
