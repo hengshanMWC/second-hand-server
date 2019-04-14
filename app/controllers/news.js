@@ -36,7 +36,6 @@ class News {
 		if(b) return {state: false, mes: b}	
 		let parm = await NewsType.core(post,aux)
 		let data = News.data(post, parm)
-		console.log(parm, post)
 		NewsType.createOther(newObj(data))
 		if(data.n_type === 0 || data.u_id){
 			return await coll._addOne(data)

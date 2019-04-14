@@ -43,7 +43,7 @@ class NewsType {
 			parm.o_state = ''
 			parm.c_title = ''
 			//买卖家都加
-			await NewsType.order(post)
+			await NewsType.order(post, parm)
 			let where = {_id: {
 				"$in": [coll.getObjectId(post.c_id), coll.getObjectId(post.b_id)]
 			}}
@@ -112,11 +112,12 @@ class NewsType {
 		post.n_id = post.u_id
 	}
 	//4订单
-	static async order(post){
+	static async order(post, parm){
 		await NewsType.getOrder(post)
 		await NewsType.orderGetUser(post)
 		orderContent(post)
-		NewsType.addOrderNew(post)
+		console.log(1,parm)
+		NewsType.addOrderNew(post, parm)
 		post.u_id = post.b_id;
 		//新增
 		// { o_name: '12324234',
@@ -182,7 +183,6 @@ class NewsType {
 		let newPost = newObj(post)
 		newPost.u_id = post.s_id;
 		let data = News.data(newPost,parm)
-		console.log('add',data)
 		coll._addOne('news', data)
 	}
 	//5商品留言
