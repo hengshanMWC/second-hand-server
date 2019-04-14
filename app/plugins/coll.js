@@ -232,34 +232,19 @@ class Coll {
 			if(is$ !== -1) this.automaticId(data[val])
 		})
 	}
-	/**
-	*列表查询数据合并
-	*forData：data循环的数据，key对比
-	*findData:data二度循环和合并的数据，key:对比的值
-	*key：findData的data指定的字段获得数据，
-	*keyb:findData的data指定的key获得指定的，forData的data，
-	*/
-	relation(forData, findData, key, keyv){
-		// if(key === 'u_name'){
-		// 	console.log(findData)
-		// }
-		forData.data.forEach( obj => findData.data.forEach( obj2 => {
-				// if(key === 'u_name'){
-				// 	console.log(obj[forData.key],obj2[findData.key])
-				// }
-				if(obj[forData.key] && obj2[findData.key] && (obj[forData.key].toString() == obj2[findData.key].toString())) {
-					if(keyv){
-						obj2[key] = obj[keyv]
-					} else if(key){
-						obj2[key] = obj
-					} else if(!key){
-						delete obj._id
-						Object.assign(obj2, obj)
-					}
-					// obj2[key] = keyv ? obj[keyv] : obj
-				}
-			})
-		)
+	//联表查询合并
+	async joint(parameter){
+		let { data, fuseData } = await this.linked(parameter)
+		this.relation({
+			data: data.list, 
+			key: fuseData.giveMateKey
+		}, 
+		{
+			data: fuseData.fitData.list, 
+			key: fuseData.id
+		}, 
+		fuseData.apiKey, 
+		fuseData.fitAppointKey) 
 	}
 	//列表查询
 	async linked(parameter){
@@ -286,20 +271,39 @@ class Coll {
 		let data = await this._find(fuseData.collection, screen, {$projection:fuseData.par})
 		return {data, fuseData}
 	}
-	//联表查询合并
-	async joint(parameter){
-		let { data, fuseData } = await this.linked(parameter)
-		this.relation({
-			data: data.list, 
-			key: fuseData.giveMateKey
-		}, 
-		{
-			data: fuseData.fitData.list, 
-			key: fuseData.id
-		}, 
-		fuseData.apiKey, 
-		fuseData.fitAppointKey) 
+	/**
+	*列表查询数据合并
+	*forData：data循环的数据，key对比
+	*findData:data二度循环和合并的数据，key:对比的值
+	*key：findData的data指定的字段获得数据，
+	*keyb:findData的data指定的key获得指定的，forData的data，
+	*/
+	relation(forData, findData, key, keyv){
+		// if(key === 'u_name'){
+		// 	console.log(findData)
+		// }
+		forData.data.forEach( obj => findData.data.forEach( obj2 => {
+				// if(key === 'u_name'){
+				// 	console.log(obj[forData.key],obj2[findData.key])
+				// }
+				if(obj[forData.key] && obj2[findData.key] && (obj[forData.key].toString() == obj2[findData.key].toString())) {
+					if(keyv){
+
+						obj2[key] = obj[keyv]
+					} else if(key){
+						obj2[key] = obj
+					} else if(!key){
+						delete obj._id
+						Object.assign(obj2, obj)
+					}
+					// obj2[key] = keyv ? obj[keyv] : obj
+				}
+			})
+		)
+
 	}
+
+	
 	isY(val){
 		return val !== '' && val !== undefined && val !== null
 	}

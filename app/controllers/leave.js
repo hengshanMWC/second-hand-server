@@ -17,7 +17,6 @@ function exists(b){
 }
 function reverse(data){
 	data.list.reverse()
-	return data
 }
 //商品留言
 export default class Leave {
@@ -35,28 +34,58 @@ export default class Leave {
 			delete get.id
 			let parm = Object.assign({},get, exists(false))
 			let data = await coll._find(parm, pro)
-			await Leave.list(data, newObj(get))
-			return reverse(data)
+			reverse(data)
+			await Leave.listPolish(data)
+			await Leave.list(data)
+			return data
 		})
 	}
-	static async list(data,get){
-		let len = data.list.length
-		Object.assign(get, exists(false))
-		if(len === 0) return
+	static async list(data){
+		let list = data.list
+		for(let i = 0, len = list.length; i < len; i++) {
+			let leave = list[i]
+			let query = {
+				ent_id: leave._id,
+				pageIndex: 1,
+				pageSize: 2,
+			}
+			leave.ent = await Leave.getlayerList(query)
+		}
 	}
 	//根据层主评论获取评论
 	static async layerList(ctx){
 		await granary.aid(async get => {
 			get.ent_id = get.id;
 			delete get.id
-			let data = await coll._find(get, pro)
-			Leave.listPolish(data)
-			return reverse(data)
+			return await Leave.getlayerList(get)
 		})
+	}
+	static async getlayerList(get){
+		let data = await coll._find(get, pro)
+		reverse(data)
+		await Leave.listPolish(data)
+		return data
 	}
 	//层里面的评论磨光
 	static async listPolish(data){
-
+		let par = {
+				u_account: 1,
+			}
+		//被回复人
+		await coll.joint({
+			fitData: data,
+			apiKey: 'u_account',
+			fitAppointKey: 'u_account',
+			par,
+		})
+		//回复人
+		await coll.joint({
+			id: 'n_id',
+			fitData: data,
+			apiKey: 'n_account',
+			fitAppointKey: 'u_account',
+			par,
+		})
 	}
 	// static async info(ctx) {
 	// 	await granary.aid(get => coll._findOne({_id: get.id}))
