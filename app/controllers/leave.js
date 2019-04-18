@@ -34,7 +34,6 @@ export default class Leave {
 			delete get.id
 			let parm = Object.assign({},get, exists(false))
 			let data = await coll._find(parm, pro)
-			reverse(data)
 			await Leave.listPolish(data)
 			await Leave.list(data)
 			return data
@@ -70,20 +69,20 @@ export default class Leave {
 	static async listPolish(data){
 		let par = {
 				u_account: 1,
+				u_name: 1,
+				u_avatar: 1,
 			}
 		//被回复人
 		await coll.joint({
 			fitData: data,
-			apiKey: 'u_account',
-			fitAppointKey: 'u_account',
+			apiKey: 'u_user',
 			par,
 		})
 		//回复人
 		await coll.joint({
 			id: 'n_id',
 			fitData: data,
-			apiKey: 'n_account',
-			fitAppointKey: 'u_account',
+			apiKey: 'n_user',
 			par,
 		})
 	}

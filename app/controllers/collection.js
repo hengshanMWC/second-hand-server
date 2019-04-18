@@ -24,9 +24,9 @@ export default class Collection {
 				collection: 'commodity',
 				fitData: fData,
 				apiKey: 'commodity',
-				par: {$projection: {
+				par:  {
 					c_detail: 0,
-				}}
+				}
 			})
 			// let cArr = fData.list.map( arr => coll.getObjectId(arr.c_id))
 			// let cData = await coll._find('commodity', {

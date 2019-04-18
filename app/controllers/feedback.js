@@ -23,10 +23,12 @@ class Feedback {
 		await granary.aid(async get => {
 			coll.number(get, ...setNumbe)
 			coll.vague(get, ...setNumbe)
-			let fList =  await coll._find(get) 
+			let fList =  await coll._find(get, {$projection: {
+				f_content: 0
+			}}) 
 			//获取用户账号
 			await coll.joint({
-				par: {$projection: {u_account: 1}},
+				par: {u_account: 1},
 				fitData: fList,
 			})
 			return fList

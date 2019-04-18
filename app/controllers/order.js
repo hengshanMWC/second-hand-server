@@ -74,10 +74,8 @@ class Order {
 	}
 	static async clientFind(ctx){
 		await granary.aid(async get => {
-			// get.
-			const res = granary.islogin(get, 'b_id');
-			if(res) return res
-			get._id = await coll.softFind(get, 'del_order', {_id: get.b_id})
+			let id = get.b_id ? 'b_id' : 's_id' 
+			get._id = await coll.softFind(get, 'del_order', {_id: get[id]})
 			return await Order.list(get)
 		})
 	}
@@ -89,7 +87,7 @@ class Order {
 		return oData
 	}
 	static async joint(oData){
-		let projection = {u_account: 1}
+		let projection = {u_name: 1}
 		//获取商品
 		await coll.joint({
 			id: 'c_id',
@@ -106,7 +104,7 @@ class Order {
 			par: projection,
 			fitData: oData,
 			apiKey: 's_name',
-			fitAppointKey: 'u_account'
+			fitAppointKey: 'u_name'
 		})
 		//获取买家
 		await coll.joint({
@@ -114,7 +112,7 @@ class Order {
 			par: projection,
 			fitData: oData,
 			apiKey: 'b_name',
-			fitAppointKey: 'u_account'
+			fitAppointKey: 'u_name'
 		})
 	}
 	static async upInfo(ctx){

@@ -14,6 +14,8 @@ export default {
 			l_reliable: 0,//靠谱度
 			l_fine:0,//性价比
 			l_num:0,//评价人数
+			del_order: [],
+			del_news: [],
 		})
 		bDef.forEach( val => post[val] = post[val] === true ? true : false)
 		Object.keys(def).forEach( val => post[val] = post[val] ? post[val] : def[val])
