@@ -56,6 +56,7 @@ class NewsType {
 				break;
 				case 2://认证
 				await NewsType.prove(post)
+				parm.p_state = ''
 				up.$set = { 
 					'u_apply.u_static': aux
 				}
@@ -116,7 +117,6 @@ class NewsType {
 		await NewsType.getOrder(post)
 		await NewsType.orderGetUser(post)
 		orderContent(post)
-		console.log(1,parm)
 		NewsType.addOrderNew(post, parm)
 		post.u_id = post.b_id;
 		//新增

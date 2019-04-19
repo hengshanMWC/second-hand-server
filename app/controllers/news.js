@@ -97,9 +97,15 @@ class News {
 		coll.number(get, ...setNumbe)
 		coll.vague(get, ...setNumbe)
 		console.log(JSON.stringify(get))
-		let nData = await coll._find(get, {$projection: {
+		let per = {$projection: {
 			n_content: 0,
-		}}) 
+		}}
+		if(get.per){
+			per = {}
+		}
+		delete get.per
+
+		let nData = await coll._find(get, per) 
 		await News.joint(nData)
 		return nData
 	}
