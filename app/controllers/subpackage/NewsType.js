@@ -119,26 +119,6 @@ class NewsType {
 		orderContent(post)
 		NewsType.addOrderNew(post, parm)
 		post.u_id = post.b_id;
-		//新增
-		// { o_name: '12324234',
-		//    o_address: '123234234',
-		//    o_tel: '234234',
-		//    b_id: '5c4dbe05b88b272b497707ee',
-		//    c_id: '5c56fe4802d368732e661f5e',
-		//    o_state: 1,
-		//    o_price: 2222,
-		//    o_num: 1,
-		//    s_id: '5c4dbfbbb88b272b497707ef',
-		//    c_title: '李白传',
-		//    o_del: [],
-		//    n_type: 4,
-		//    n_content: undefined }
-
-		//修改状态
-	// 	{ id: '5c810ae35ff9b626637c42a1',
-		 // o_state: 3,
-		 // n_type: 4,
-		 // n_content: undefined }
 	}
 	//获取订单相关信息
 	static async getOrder(post){
@@ -220,7 +200,7 @@ class NewsType {
 		}
 		if(post.reply_id){
 			parm.reply_id = ''//评论id
-			NewsType.reply(newObj(post), newObj(parm), lData.n_id.toString())
+			await NewsType.reply(post, newObj(parm), lData.n_id.toString())
 		}
 	}
 	//回复：
@@ -228,11 +208,11 @@ class NewsType {
 		let lData = await coll._findOne('leave', {_id: post.reply_id}, {$projection: {
 			n_id: 1
 		}})
+		post.u_id = lData.n_id
 		// console.log(typeof lData.n_id)
 		//回复者和被回复者是否同一个人.
 		//如果层主，和被回复是同一个人，只能生成一条信息
 		if(post.n_id != lData.n_id && n_id != lData.n_id){
-			post.u_id = lData.n_id
 			//楼中楼+消息
 			coll._upOne('user', {_id: post.u_id}, {
 				$inc: {
@@ -253,6 +233,7 @@ class NewsType {
 			text = 'comment'
 			break;
 		}
+		// console.log(data)
 		delete data.n_type
 		if(text) coll._addOne(text, data)
 	}

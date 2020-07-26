@@ -1,6 +1,5 @@
 import db from '../models'
 import granary from '../plugins/granary'
-import md5 from 'md5'
 import fnUser from '../utils/user'
 // db.setCollection('user');
 const coll = db.createCollection('user');

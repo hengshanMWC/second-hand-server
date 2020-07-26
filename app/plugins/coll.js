@@ -33,6 +33,32 @@ class Coll {
 				})
 		})
 	}
+	_findSort(collectionName, json, project){
+		let {name, data, data2: pro = {}} = this.reqData(collectionName, json, project)
+		this.automaticId(data)
+		let projectData = this.projectData(pro)
+		let arr = this.getPage(data)
+		// console.log(projectData)
+		return new Promise((resolve,reject)=>{
+			this.db.connect()
+				.then(db => {
+					db.collection(name).find(data).count( (err, count) => {
+						if(err){
+							reject(err)
+							return;
+						}
+						let result = db.collection(name).find(data)
+						.project(projectData.$projection)
+						.limit(arr[0])
+						.skip(arr[1])
+						.sort({_id: 1})
+						result.toArray((err,docs) => {
+							err ? reject(err) : resolve({list: docs,count})
+						})
+					})
+				})
+		})
+	}
 	_findOne(collectionName, json, project){
 		let {name, data, data2: projectData = {projection: {}}} = this.reqData(collectionName, json, project)
 		this.automaticId(data)

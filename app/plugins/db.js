@@ -6,9 +6,9 @@ const MongoClient = MongoDB.MongoClient;
 class Db {
 	static getInstance(option){
 		if(!Db.instance){
-            Db.instance = new Db(option);
-        }
-        return  Db.instance;
+			Db.instance = new Db(option);
+		}
+		return  Db.instance;
 	}
 	//地址，数据库
 	constructor(option){

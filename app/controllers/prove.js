@@ -77,21 +77,6 @@ class Prove {
 			}
 			const res = granary.islogin(post, 'p_id');
 			if(res) return res
-			// if(data.p_content) {
-			// 	if(!Array.isArray(data.p_contents)) data.p_contents = new Array()
-			// 	try {
-			// 		data.p_contents.push({
-			// 			content: data.p_content,
-			// 			state: data.p_state,
-			// 			u_id: ctx.session.userInfo._id,
-			// 			create_date: formatTime(),
-			// 		}) 
-			// 	} catch(e) {
-			// 		return {mes: '审核用户需要登录', state: false}
-			// 	}
-			// 	// coll._upOne('user', {_id: })
-			// 	delete data.p_content
-			// }
 			let data = coll.delFuse(post, setData)	
 			let newPost = newObj(post)
 			newPost.n_id = post.p_id

@@ -61,7 +61,7 @@ export default class Leave {
 	}
 	static async getlayerList(get){
 		let data = await coll._find(get, pro)
-		reverse(data)
+		// reverse(data)
 		await Leave.listPolish(data)
 		return data
 	}

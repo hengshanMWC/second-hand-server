@@ -71,24 +71,6 @@ class News {
 				}
 				
 			]
-			// get.$or = [
-			// 	{
-			// 		$and: [
-			// 			{_id},
-			// 			{
-			// 				u_id: coll.getObjectId(get.u_id)
-			// 			}
-						
-			// 		]
-					
-			// 	},
-			// 	{
-			// 		$and: [
-			// 			{_id},
-			// 			{n_type: 0}
-			// 		]
-			// 	}
-			// ]
 			delete get.u_id
 			return await News.list(get)
 		})
@@ -96,7 +78,7 @@ class News {
 	static async list(get){
 		coll.number(get, ...setNumbe)
 		coll.vague(get, ...setNumbe)
-		console.log(JSON.stringify(get))
+		// console.log(JSON.stringify(get))
 		let per = {$projection: {
 			n_content: 0,
 		}}
